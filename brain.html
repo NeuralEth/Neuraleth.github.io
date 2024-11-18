@@ -291,19 +291,56 @@
         #layout-temporal:hover {
             background: rgba(136, 255, 0, 0.3);
         }
+
+        .performance-monitor {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 170, 255, 0.3);
+            font-family: monospace;
+            font-size: 12px;
+            color: #fff;
+            z-index: 1000;
+            min-width: 200px;
+        }
+
+        .stats-container {
+            margin-top: 10px;
+        }
+
+        .stat-row {
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .good {
+            color: #00ff00;
+        }
+
+        .caution {
+            color: #ffaa00;
+        }
+
+        .warning {
+            color: #ff4444;
+        }
+
+        canvas {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 <body>
     <div id="canvas-container"></div>
     <div class="controls">
         <button id="reset-camera">Reset View</button>
-        <button id="toggle-labels">Toggle Labels</button>
-        <div class="layout-buttons">
-            <button id="layout-spiral">Spiral</button>
-            <button id="layout-sphere">Sphere</button>
-            <button id="layout-grid">Grid</button>
-            <button id="layout-temporal">Temporal</button>
-        </div>
+        <button id="layout-spiral">Spiral</button>
+        <button id="layout-sphere">Sphere</button>
+        <button id="layout-grid">Grid</button>
+        <button id="layout-temporal">Temporal</button>
     </div>
     <div class="info-panel">
         <h3 id="event-title"></h3>
@@ -323,8 +360,19 @@
         let hoveredNode = null;
         let hoverLabel = null;
 
+        // Add texture cache and cleanup
+        const textureCache = new Map();
+
+        function cleanupTexture(texture) {
+            if (texture && texture.dispose) {
+                texture.dispose();
+            }
+        }
+
         // Move animate function to global scope
         function animate() {
+            const startTime = performance.now();
+            
             requestAnimationFrame(animate);
             TWEEN.update();
             
@@ -361,6 +409,11 @@
             
             controls.update();
             renderer.render(scene, camera);
+            
+            const frameTime = performance.now() - startTime;
+            if (frameTime > 16.67) { // Longer than 60fps frame time
+                console.warn(`Long frame: ${Math.round(frameTime)}ms`);
+            }
         }
 
         async function init() {
@@ -408,7 +461,6 @@
             renderer.domElement.addEventListener('mousemove', onMouseMove);
             renderer.domElement.addEventListener('click', onMouseClick);
             document.getElementById('reset-camera').addEventListener('click', resetCamera);
-            document.getElementById('toggle-labels').addEventListener('click', toggleLabels);
 
             // Add layout button listeners
             document.getElementById('layout-spiral').addEventListener('click', () => updateLayout('spiral'));
@@ -417,6 +469,8 @@
             document.getElementById('layout-temporal').addEventListener('click', () => updateLayout('temporal'));
 
             animate();
+
+            createPerformanceMonitor();
         }
 
         async function createTimelineGraph() {
@@ -571,7 +625,15 @@
             return dataPoints[Math.floor(Math.random() * dataPoints.length)];
         }
 
+        // Modify createTextTexture to use cache
         function createTextTexture(text, fontSize = 16, color = '#ffffff') {
+            const key = `${text}-${fontSize}-${color}`;
+            
+            // Clean up old texture if it exists
+            if (textureCache.has(key)) {
+                cleanupTexture(textureCache.get(key));
+            }
+            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 512;
@@ -616,10 +678,12 @@
             });
             
             const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true;
+            textureCache.set(key, texture);
+            
             return texture;
         }
 
+        // Add immediate cleanup when hover labels change
         function onMouseMove(event) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -630,6 +694,10 @@
             // Clear previous hover state
             if (hoveredNode && (!intersects.length || intersects[0].object !== hoveredNode)) {
                 if (hoverLabel) {
+                    if (hoverLabel.material.map) {
+                        cleanupTexture(hoverLabel.material.map);
+                    }
+                    hoverLabel.material.dispose();
                     scene.remove(hoverLabel);
                     hoverLabel = null;
                 }
@@ -675,6 +743,21 @@
                 }
                 
                 if (selectedNode) {
+                    // Trigger hover effect for selected node
+                    hoveredNode = selectedNode;
+                    
+                    // Create hover label if it doesn't exist
+                    if (hoverLabel) scene.remove(hoverLabel);
+                    
+                    hoverLabel = new THREE.Sprite(new THREE.SpriteMaterial({
+                        map: createTextTexture(hoveredNode.userData.attributes.name, 16, '#00aaff'),
+                        transparent: true,
+                        opacity: 0.9
+                    }));
+                    
+                    hoverLabel.scale.set(20, 10, 1);
+                    scene.add(hoverLabel);
+
                     // Remove previous floating title
                     if (titleSprite) {
                         scene.remove(titleSprite);
@@ -719,6 +802,13 @@
 
                     showNodeInfo(selectedNode);
                 } else {
+                    // Clear hover state when clicking empty space
+                    if (hoverLabel) {
+                        scene.remove(hoverLabel);
+                        hoverLabel = null;
+                    }
+                    hoveredNode = null;
+                    
                     // Click on empty space - just clear selection
                     if (titleSprite) {
                         scene.remove(titleSprite);
@@ -748,13 +838,6 @@
             } catch (error) {
                 console.error('Error in onMouseClick:', error);
             }
-        }
-
-        function toggleLabels() {
-            showLabels = !showLabels;
-            nodes.forEach(node => {
-                if (node.label) node.label.visible = showLabels;
-            });
         }
 
         function resetCamera() {
@@ -1010,11 +1093,29 @@
             });
         }
 
+        // Add this cleanup utility function
+        function cleanupSprite(sprite) {
+            if (!sprite) return;
+            
+            try {
+                if (sprite.material) {
+                    if (sprite.material.map) {
+                        sprite.material.map.dispose();
+                    }
+                    sprite.material.dispose();
+                }
+                scene.remove(sprite);
+            } catch (e) {
+                console.error('Error cleaning up sprite:', e);
+            }
+        }
+
+        // Then our updateLayout function remains the same
         function updateLayout(layoutType) {
-            // Clear any existing cluster labels first
+            // Clean up any existing cluster labels first
             scene.children.forEach(child => {
                 if (child.isClusterLabel) {
-                    scene.remove(child);
+                    cleanupSprite(child);
                 }
             });
 
@@ -1226,6 +1327,124 @@
                 }
             };
             updateEdges();
+        }
+
+        // Add periodic global cleanup
+        setInterval(() => {
+            // Clean up texture cache
+            textureCache.forEach(cleanupTexture);
+            textureCache.clear();
+            
+            // Force garbage collection if available
+            if (window.gc) {
+                window.gc();
+            }
+        }, 10000); // Every 10 seconds
+
+        // Add performance monitoring
+        function createPerformanceMonitor() {
+            const monitor = document.createElement('div');
+            monitor.className = 'performance-monitor';
+            document.body.appendChild(monitor);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 60;
+            monitor.appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+            const maxSamples = 100;
+            const samples = new Array(maxSamples).fill(0);
+            let currentIndex = 0;
+            let lastTime = performance.now();
+            let frames = 0;
+            let fps = 0;
+
+            // Stats container
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'stats-container';
+            monitor.appendChild(statsDiv);
+
+            function updateStats() {
+                const now = performance.now();
+                const frameTime = now - lastTime;
+                lastTime = now;
+                frames++;
+
+                // Update FPS every second
+                if (now > lastFpsUpdate + 1000) {
+                    fps = Math.round((frames * 1000) / (now - lastFpsUpdate));
+                    frames = 0;
+                    lastFpsUpdate = now;
+                }
+
+                // Get memory info
+                const memory = window.performance.memory ? {
+                    used: Math.round(window.performance.memory.usedJSHeapSize / 1048576),
+                    total: Math.round(window.performance.memory.jsHeapSizeLimit / 1048576)
+                } : null;
+
+                // Get renderer info
+                const renderInfo = renderer.info.render;
+                
+                // Update stats display
+                statsDiv.innerHTML = `
+                    <div class="stat-row ${fps < 30 ? 'warning' : fps < 55 ? 'caution' : 'good'}">
+                        FPS: ${fps}
+                    </div>
+                    <div class="stat-row ${frameTime > 16.7 ? 'warning' : frameTime > 10 ? 'caution' : 'good'}">
+                        Frame: ${Math.round(frameTime)}ms
+                    </div>
+                    <div class="stat-row">
+                        Draw Calls: ${renderInfo.calls}
+                    </div>
+                    <div class="stat-row">
+                        Triangles: ${renderInfo.triangles.toLocaleString()}
+                    </div>
+                    ${memory ? `
+                        <div class="stat-row ${memory.used/memory.total > 0.8 ? 'warning' : memory.used/memory.total > 0.6 ? 'caution' : 'good'}">
+                            Memory: ${memory.used}MB / ${memory.total}MB
+                        </div>
+                    ` : ''}
+                    <div class="stat-row">
+                        Objects: ${scene.children.length}
+                    </div>
+                `;
+
+                // Update performance graph
+                samples[currentIndex] = frameTime;
+                currentIndex = (currentIndex + 1) % maxSamples;
+
+                // Draw graph
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.beginPath();
+                ctx.lineWidth = 2;
+                samples.forEach((sample, i) => {
+                    const x = (i / maxSamples) * canvas.width;
+                    const y = Math.min(sample, 100) / 100 * canvas.height;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, canvas.height - y);
+                    } else {
+                        ctx.lineTo(x, canvas.height - y);
+                    }
+                    
+                    // Color based on performance
+                    const hue = 120 - (Math.min(sample, 100) / 100 * 120);
+                    ctx.strokeStyle = `hsl(${hue}, 100%, 50%)`;
+                });
+                ctx.stroke();
+            }
+
+            let lastFpsUpdate = performance.now();
+            
+            function update() {
+                updateStats();
+                requestAnimationFrame(update);
+            }
+            update();
         }
 
         init();
