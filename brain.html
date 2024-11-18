@@ -450,6 +450,24 @@
             padding: 10px;
             border: 1px solid rgba(0, 170, 255, 0.3);
         }
+
+        /* Add new styles for audio player container */
+        .audio-player-container {
+            position: fixed;
+            bottom: 220px;  /* Increased to position above performance monitor */
+            left: 20px;
+            width: 200px;  /* Match performance monitor width */
+            z-index: 1000;
+        }
+
+        #memory-frame {
+            width: 100%;
+            height: 90px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 170, 255, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -475,7 +493,6 @@
         let titleSprite = null;
         let isAnimating = false;
         let hoveredNode = null;
-        let hoverLabel = null;
         let autoAdvanceEnabled = localStorage.getItem('autoAdvanceEnabled') === 'true';
         let currentAudioPlayer = null;
 
@@ -486,6 +503,69 @@
             if (texture && texture.dispose) {
                 texture.dispose();
             }
+        }
+
+        // Add these cleanup functions near the top of the script
+        function disposeNode(node) {
+            if (node.geometry) {
+                node.geometry.dispose();
+            }
+            if (node.material) {
+                if (Array.isArray(node.material)) {
+                    node.material.forEach(material => material.dispose());
+                } else {
+                    node.material.dispose();
+                }
+            }
+            // Clean up particles
+            if (node.particles) {
+                node.particles.forEach(particle => {
+                    if (particle.material.map) particle.material.map.dispose();
+                    particle.material.dispose();
+                    scene.remove(particle);
+                });
+                delete node.particles;
+            }
+            // Clean up label
+            if (node.label) {
+                if (node.label.material.map) node.label.material.map.dispose();
+                node.label.material.dispose();
+                scene.remove(node.label);
+                delete node.label;
+            }
+        }
+
+        function cleanupScene() {
+            // Clean up nodes
+            nodes.forEach(node => {
+                disposeNode(node);
+                scene.remove(node);
+            });
+            nodes = [];
+
+            // Clean up edges
+            edges.forEach(edge => {
+                if (edge.geometry) edge.geometry.dispose();
+                if (edge.material) edge.material.dispose();
+                scene.remove(edge);
+            });
+            edges = [];
+
+            // Clean up sprites and labels
+            scene.children.forEach(child => {
+                if (child.isSprite || child.isClusterLabel) {
+                    if (child.material.map) child.material.map.dispose();
+                    child.material.dispose();
+                    scene.remove(child);
+                }
+            });
+
+            // Clean up texture cache
+            textureCache.forEach(texture => texture.dispose());
+            textureCache.clear();
+
+            // Force renderer to release memory
+            renderer.renderLists.dispose();
         }
 
         // Move animate function to global scope
@@ -518,12 +598,6 @@
                         });
                     }
                 });
-            }
-            
-            // Update hover label to face camera
-            if (hoverLabel) {
-                hoverLabel.position.copy(hoveredNode.position);
-                hoverLabel.position.y += 3;
             }
             
             controls.update();
@@ -593,6 +667,9 @@
         }
 
         async function createTimelineGraph() {
+            // Clean up existing scene first
+            cleanupScene();
+            
             try {
                 const response = await fetch('/timeline_graph.json');
                 const data = await response.json();
@@ -816,7 +893,6 @@
             return texture;
         }
 
-        // Add immediate cleanup when hover labels change
         function onMouseMove(event) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -826,38 +902,12 @@
 
             // Clear previous hover state
             if (hoveredNode && (!intersects.length || intersects[0].object !== hoveredNode)) {
-                if (hoverLabel) {
-                    if (hoverLabel.material.map) {
-                        cleanupTexture(hoverLabel.material.map);
-                    }
-                    hoverLabel.material.dispose();
-                    scene.remove(hoverLabel);
-                    hoverLabel = null;
-                }
                 hoveredNode = null;
             }
 
             // Set new hover state
             if (intersects.length > 0 && intersects[0].object !== hoveredNode) {
                 hoveredNode = intersects[0].object;
-                
-                // Create hover label
-                if (hoverLabel) scene.remove(hoverLabel);
-                
-                hoverLabel = new THREE.Sprite(new THREE.SpriteMaterial({
-                    map: createTextTexture(hoveredNode.userData.attributes.name, 16, '#00aaff'),
-                    transparent: true,
-                    opacity: 0.9
-                }));
-                
-                hoverLabel.scale.set(20, 10, 1);
-                scene.add(hoverLabel);
-            }
-
-            // Update hover label position if it exists
-            if (hoverLabel && hoveredNode) {
-                hoverLabel.position.copy(hoveredNode.position);
-                hoverLabel.position.y += 3; // Offset above node
             }
         }
 
@@ -876,48 +926,36 @@
                 }
                 
                 if (selectedNode) {
-                    // Trigger hover effect for selected node
+                    // Remove hover-related code
                     hoveredNode = selectedNode;
-                    
-                    // Create hover label if it doesn't exist
-                    if (hoverLabel) scene.remove(hoverLabel);
-                    
-                    hoverLabel = new THREE.Sprite(new THREE.SpriteMaterial({
-                        map: createTextTexture(hoveredNode.userData.attributes.name, 16, '#00aaff'),
-                        transparent: true,
-                        opacity: 0.9
-                    }));
-                    
-                    hoverLabel.scale.set(20, 10, 1);
-                    scene.add(hoverLabel);
 
                     // Remove previous floating title
                     if (titleSprite) {
                         scene.remove(titleSprite);
                     }
 
-                    // Create floating title
+                    // Create new title sprite
                     titleSprite = new THREE.Sprite(new THREE.SpriteMaterial({
-                        map: createTextTexture(selectedNode.userData.attributes.name, 24),
-                        color: 0x00aaff,
+                        map: createTextTexture(selectedNode.userData.attributes.name, 32, '#00aaff'),
                         transparent: true,
-                        opacity: 1
+                        opacity: 0.9
                     }));
-                    titleSprite.scale.set(20, 10, 1);
+                    titleSprite.scale.set(30, 15, 1);
                     titleSprite.position.copy(selectedNode.position);
-                    titleSprite.position.y += 4;
+                    titleSprite.position.y += 4;  // Offset above the node
                     scene.add(titleSprite);
 
                     isAnimating = true;
 
-                    // Get current camera-to-target vector
-                    const currentOffset = camera.position.clone().sub(controls.target);
+                    // Get current camera direction vector
+                    const direction = camera.position.clone().sub(controls.target).normalize();
                     
                     // Set new target
                     const targetPosition = selectedNode.position.clone();
                     
-                    // Calculate new camera position by adding current offset to new target
-                    const newPosition = targetPosition.clone().add(currentOffset);
+                    // Calculate new camera position - much closer to the node
+                    const distance = 20; // Reduced distance for closer zoom
+                    const newPosition = targetPosition.clone().add(direction.multiplyScalar(distance));
 
                     // Animate both target and camera together
                     new TWEEN.Tween(controls.target)
@@ -936,10 +974,6 @@
                     showNodeInfo(selectedNode);
                 } else {
                     // Clear hover state when clicking empty space
-                    if (hoverLabel) {
-                        scene.remove(hoverLabel);
-                        hoverLabel = null;
-                    }
                     hoveredNode = null;
                     
                     // Click on empty space - just clear selection
@@ -995,22 +1029,25 @@
                 window.activeStreamTimeout = null;
             }
             
-            // Remove existing audio player if present
-            const existingPlayer = panel.querySelector('#elevenlabs-audionative-widget');
-            if (existingPlayer) {
-                existingPlayer.remove();
-            }
+            // Remove existing iframe if present
+            const existingPlayer = document.querySelector('#memory-frame');
+            // if (existingPlayer) {
+            //     existingPlayer.remove();
+            // }
             
-            // Create new audio player
-            const audioPlayer = document.createElement('div');
-            audioPlayer.id = 'elevenlabs-audionative-widget';
-            audioPlayer.setAttribute('data-height', '90');
-            audioPlayer.setAttribute('data-width', '100%');
-            audioPlayer.setAttribute('data-frameborder', 'no');
-            audioPlayer.setAttribute('data-scrolling', 'no');
-            audioPlayer.setAttribute('data-publicuserid', '35d355a390902c451dabd06fdfe93f98157eb908052465f5fa2d42adb52472c3');
-            audioPlayer.setAttribute('data-playerurl', 'https://elevenlabs.io/player/index.html');
-            audioPlayer.innerHTML = 'Loading Elevenlabs Text to Speech...';
+            // Create audio player container if it doesn't exist
+            // let audioContainer = document.querySelector('.audio-player-container');
+            // if (!audioContainer) {
+            //     audioContainer = document.createElement('div');
+            //     audioContainer.className = 'audio-player-container';
+            //     document.body.appendChild(audioContainer);
+            // }
+            
+            // Create new iframe in the audio container
+            const memoryFrame = document.createElement('iframe');
+            memoryFrame.id = 'memory-frame';
+            memoryFrame.src = `/memory/${node.userData.key}`;
+            // audioContainer.appendChild(memoryFrame);
             
             // Show the panel immediately
             panel.style.display = 'block';
@@ -1028,16 +1065,16 @@
             const descriptionEl = document.getElementById('event-description');
             descriptionEl.textContent = '';
             
-            // Insert audio player at the top of the panel
-            panel.insertBefore(audioPlayer, panel.firstChild);
-            
             // Ensure the script is loaded
-            if (!document.querySelector('script[src="https://elevenlabs.io/player/audioNativeHelper.js"]')) {
-                const script = document.createElement('script');
-                script.src = 'https://elevenlabs.io/player/audioNativeHelper.js';
-                script.type = 'text/javascript';
-                document.body.appendChild(script);
-            }
+            // if (!document.querySelector('script[src="https://elevenlabs.io/player/audioNativeHelper.js"]')) {
+            //     const script = document.createElement('script');
+            //     script.src = 'https://elevenlabs.io/player/audioNativeHelper.js';
+            //     script.type = 'text/javascript';
+            //     document.body.appendChild(script);
+            // }
+
+            // Add next event button immediately
+            addNextEventButton(node, panel);
             
             // Show panel with fade
             setTimeout(() => {
@@ -1055,7 +1092,6 @@
                     window.activeStreamTimeout = null;
                     // After description is done, add additional elements
                     addAdditionalContent(node, descriptionEl);
-                    addNextEventButton(node, panel);
                 }
             };
             
@@ -1500,15 +1536,19 @@
 
         // Add periodic global cleanup
         setInterval(() => {
-            // Clean up texture cache
-            textureCache.forEach(cleanupTexture);
-            textureCache.clear();
-            
-            // Force garbage collection if available
-            if (window.gc) {
-                window.gc();
-            }
-        }, 10000); // Every 10 seconds
+            // Clean up unused textures
+            textureCache.forEach((texture, key) => {
+                if (!scene.children.some(child => 
+                    child.material && child.material.map === texture
+                )) {
+                    texture.dispose();
+                    textureCache.delete(key);
+                }
+            });
+
+            // Force renderer to release memory
+            renderer.renderLists.dispose();
+        }, 30000); // Every 30 seconds
 
         // Add performance monitoring
         function createPerformanceMonitor() {
@@ -1698,6 +1738,14 @@
             console.log('Next node:', nextNode ? nextNode.userData.attributes.name : 'None');
             console.log('Button container added:', buttonContainer);
         }
+
+        // Add window event listener for cleanup
+        window.addEventListener('beforeunload', () => {
+            cleanupScene();
+            if (renderer) {
+                renderer.dispose();
+            }
+        });
 
         init();
     </script>
