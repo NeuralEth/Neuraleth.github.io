@@ -74,6 +74,7 @@
             top: 20px;
             right: 20px;
             width: 400px;
+            max-height: calc(100vh - 40px);
             background: rgba(0, 10, 20, 0.85);
             padding: 20px;
             border-radius: 12px;
@@ -85,6 +86,30 @@
             font-size: 11px;
             line-height: 1.2;
             transition: opacity 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            &::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            &::-webkit-scrollbar-track {
+                background: rgba(0, 10, 20, 0.3);
+                border-radius: 4px;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: rgba(0, 170, 255, 0.3);
+                border-radius: 4px;
+                border: 1px solid rgba(0, 170, 255, 0.5);
+            }
+
+            &::-webkit-scrollbar-thumb:hover {
+                background: rgba(0, 170, 255, 0.5);
+            }
+
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 170, 255, 0.3) rgba(0, 10, 20, 0.3);
         }
 
         .info-panel h3 {
@@ -331,6 +356,100 @@
         canvas {
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
+
+        .info-panel {
+            /* ... existing styles ... */
+            transition: opacity 0.3s ease;
+        }
+
+        .source-prompt,
+        .expansion-prompt,
+        .connection,
+        .generated-events {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .connection {
+            transform-origin: left;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .connection:hover {
+            transform: translateX(5px);
+        }
+
+        .next-event-button {
+            margin-top: 15px;
+            padding: 8px 12px;
+            background: rgba(136, 255, 0, 0.2);
+            border: 1px solid rgba(136, 255, 0, 0.5);
+            color: #88ff00;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .next-event-button:hover {
+            background: rgba(136, 255, 0, 0.3);
+        }
+
+        .next-event-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(136, 255, 0, 0.1);
+        }
+
+        .fast-forward-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 170, 255, 0.2);
+            border: 1px solid rgba(0, 170, 255, 0.5);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .fast-forward-button:hover {
+            background: rgba(0, 170, 255, 0.3);
+            opacity: 1;
+        }
+
+        .auto-advance {
+            background: rgba(255, 136, 0, 0.2) !important;
+            border: 1px solid rgba(255, 136, 0, 0.5) !important;
+            color: #ff8800 !important;
+        }
+
+        .auto-advance.active {
+            background: rgba(136, 255, 0, 0.2) !important;
+            border: 1px solid rgba(136, 255, 0, 0.5) !important;
+            color: #88ff00 !important;
+        }
+
+        .auto-advance:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(255, 136, 0, 0.1) !important;
+        }
+
+        #elevenlabs-audionative-widget {
+            margin-bottom: 15px;
+            background: rgba(0, 10, 20, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(0, 170, 255, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -355,10 +474,10 @@
         let selectedNode = null;
         let titleSprite = null;
         let isAnimating = false;
-
-        // Add hover state tracking
         let hoveredNode = null;
         let hoverLabel = null;
+        let autoAdvanceEnabled = localStorage.getItem('autoAdvanceEnabled') === 'true';
+        let currentAudioPlayer = null;
 
         // Add texture cache and cleanup
         const textureCache = new Map();
@@ -548,6 +667,20 @@
                         scene.add(line);
                     }
                 });
+
+                // After all nodes are created, find and select earliest node
+                const earliestNode = nodes.reduce((earliest, current) => {
+                    const currentTime = new Date(current.userData.attributes.timestamp).getTime();
+                    const earliestTime = new Date(earliest.userData.attributes.timestamp).getTime();
+                    return currentTime < earliestTime ? current : earliest;
+                }, nodes[0]);
+
+                // Simulate a click on the earliest node
+                if (earliestNode) {
+                    setTimeout(() => {
+                        onMouseClick(null, earliestNode);
+                    }, 1000); // Wait 1 second for initial scene to settle
+                }
 
             } catch (error) {
                 console.error('Error loading timeline data:', error);
@@ -856,6 +989,34 @@
             const panel = document.querySelector('.info-panel');
             const attrs = node.userData.attributes;
             
+            // Clear any ongoing streaming timeouts
+            if (window.activeStreamTimeout) {
+                clearTimeout(window.activeStreamTimeout);
+                window.activeStreamTimeout = null;
+            }
+            
+            // Remove existing audio player if present
+            const existingPlayer = panel.querySelector('#elevenlabs-audionative-widget');
+            if (existingPlayer) {
+                existingPlayer.remove();
+            }
+            
+            // Create new audio player
+            const audioPlayer = document.createElement('div');
+            audioPlayer.id = 'elevenlabs-audionative-widget';
+            audioPlayer.setAttribute('data-height', '90');
+            audioPlayer.setAttribute('data-width', '100%');
+            audioPlayer.setAttribute('data-frameborder', 'no');
+            audioPlayer.setAttribute('data-scrolling', 'no');
+            audioPlayer.setAttribute('data-publicuserid', '35d355a390902c451dabd06fdfe93f98157eb908052465f5fa2d42adb52472c3');
+            audioPlayer.setAttribute('data-playerurl', 'https://elevenlabs.io/player/index.html');
+            audioPlayer.innerHTML = 'Loading Elevenlabs Text to Speech...';
+            
+            // Show the panel immediately
+            panel.style.display = 'block';
+            panel.style.opacity = 0;
+            
+            // Clear previous content
             document.getElementById('event-title').textContent = attrs.name;
             document.getElementById('event-date').textContent = new Date(attrs.timestamp)
                 .toLocaleDateString('en-US', {
@@ -863,211 +1024,212 @@
                     month: 'long',
                     day: 'numeric'
                 });
-            document.getElementById('event-description').textContent = attrs.description;
+            
+            const descriptionEl = document.getElementById('event-description');
+            descriptionEl.textContent = '';
+            
+            // Insert audio player at the top of the panel
+            panel.insertBefore(audioPlayer, panel.firstChild);
+            
+            // Ensure the script is loaded
+            if (!document.querySelector('script[src="https://elevenlabs.io/player/audioNativeHelper.js"]')) {
+                const script = document.createElement('script');
+                script.src = 'https://elevenlabs.io/player/audioNativeHelper.js';
+                script.type = 'text/javascript';
+                document.body.appendChild(script);
+            }
+            
+            // Show panel with fade
+            setTimeout(() => {
+                panel.style.opacity = 1;
+            }, 10);
+
+            // Stream in the description
+            let index = 0;
+            const streamText = () => {
+                if (index < attrs.description.length) {
+                    descriptionEl.textContent += attrs.description[index];
+                    index++;
+                    window.activeStreamTimeout = setTimeout(streamText, Math.random() * 20 + 10);
+                } else {
+                    window.activeStreamTimeout = null;
+                    // After description is done, add additional elements
+                    addAdditionalContent(node, descriptionEl);
+                    addNextEventButton(node, panel);
+                }
+            };
+            
+            streamText();
+        }
+
+        function addAdditionalContent(node, container) {
+            const attrs = node.userData.attributes;
             
             // Add source prompt info if this node was generated from one
             if (attrs.source_prompt) {
                 const sourceNode = nodes.find(n => n.userData.key === attrs.source_prompt.source_node);
                 if (sourceNode) {
-                    const promptEl = document.createElement('div');
-                    promptEl.className = 'source-prompt';
-                    promptEl.innerHTML = `
-                        <h4>Generated from prompt:</h4>
-                        <div class="prompt-source">
-                            <span class="source-node">${sourceNode.userData.attributes.name}</span>
-                            <div class="prompt-text">${sourceNode.userData.attributes.expansion_prompt}</div>
-                        </div>
-                    `;
-                    
-                    // Make source prompt clickable
-                    promptEl.style.cursor = 'pointer';
-                    promptEl.addEventListener('click', () => {
-                        onMouseClick(null, sourceNode);
+                    streamElement({
+                        tag: 'div',
+                        className: 'source-prompt',
+                        html: `
+                            <h4>Generated from prompt:</h4>
+                            <div class="prompt-source">
+                                <span class="source-node">${sourceNode.userData.attributes.name}</span>
+                                <div class="prompt-text">${sourceNode.userData.attributes.expansion_prompt}</div>
+                            </div>
+                        `,
+                        container,
+                        onClick: () => onMouseClick(null, sourceNode)
                     });
-                    
-                    document.getElementById('event-description').insertBefore(
-                        promptEl, 
-                        document.getElementById('event-description').firstChild
-                    );
                 }
             }
             
             // Add expansion prompt if it exists
             if (attrs.expansion_prompt) {
-                const promptEl = document.createElement('div');
-                promptEl.className = 'expansion-prompt';
-                
-                // Find any nodes generated from this prompt
                 const generatedNodes = nodes.filter(n => 
                     n.userData.attributes.source_prompt && 
                     n.userData.attributes.source_prompt.source_node === node.userData.key
                 );
                 
-                promptEl.innerHTML = `
-                    <div class="prompt-header">
-                        <span class="prompt-icon">🤔</span>
-                        <span class="prompt-text">${attrs.expansion_prompt}</span>
-                    </div>
-                    ${generatedNodes.length > 0 ? `
-                        <div class="generated-count">
-                            Generated ${generatedNodes.length} event${generatedNodes.length > 1 ? 's' : ''}
-                            <span class="view-generated">View →</span>
+                streamElement({
+                    tag: 'div',
+                    className: 'expansion-prompt',
+                    html: `
+                        <div class="prompt-header">
+                            <span class="prompt-icon">🤔</span>
+                            <span class="prompt-text">${attrs.expansion_prompt}</span>
                         </div>
-                    ` : ''}
-                `;
-                
-                // Make prompt clickable if it has generated events
-                if (generatedNodes.length > 0) {
-                    promptEl.style.cursor = 'pointer';
-                    promptEl.addEventListener('click', () => {
-                        // Toggle generated events section
-                        const existingGenerated = document.querySelector('.generated-events');
-                        if (existingGenerated) {
-                            existingGenerated.remove();
-                        } else {
-                            const generatedEl = document.createElement('div');
-                            generatedEl.className = 'generated-events';
-                            generatedEl.innerHTML = `
-                                <h4>Generated from this prompt:</h4>
-                                ${generatedNodes.map(n => `
-                                    <div class="generated-event" data-node-key="${n.userData.key}">
-                                        <span class="event-name">${n.userData.attributes.name}</span>
-                                        <div class="event-date">${new Date(n.userData.attributes.timestamp)
-                                            .toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'short'
-                                            })}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            `;
-                            
-                            // Make generated events clickable
-                            generatedEl.querySelectorAll('.generated-event').forEach(el => {
-                                el.style.cursor = 'pointer';
-                                el.addEventListener('click', () => {
-                                    const generatedNode = nodes.find(n => n.userData.key === el.dataset.nodeKey);
-                                    if (generatedNode) {
-                                        onMouseClick(null, generatedNode);
-                                    }
-                                });
-                            });
-                            
-                            promptEl.after(generatedEl);
-                        }
-                    });
-                }
-                
-                document.getElementById('event-description').appendChild(promptEl);
+                        ${generatedNodes.length > 0 ? `
+                            <div class="generated-count">
+                                Generated ${generatedNodes.length} event${generatedNodes.length > 1 ? 's' : ''}
+                                <span class="view-generated">View →</span>
+                            </div>
+                        ` : ''}
+                    `,
+                    container,
+                    onClick: generatedNodes.length > 0 ? () => toggleGeneratedEvents(generatedNodes, container) : null
+                });
             }
             
-            // Show connected events with click handlers
+            // Add connections section
             const connections = edges.filter(edge => 
                 edge.userData.source === node.userData.key || 
                 edge.userData.target === node.userData.key
             );
             
             if (connections.length > 0) {
-                const connectionsEl = document.createElement('div');
-                connectionsEl.className = 'connections';
-                connectionsEl.innerHTML = `<h4>Connected Events:</h4>`;
-                
-                connections.forEach(edge => {
-                    const connectedNodeKey = edge.userData.source === node.userData.key ? 
-                        edge.userData.target : edge.userData.source;
-                    const connectedNode = nodes.find(n => n.userData.key === connectedNodeKey);
-                    
-                    if (connectedNode) {
-                        // Calculate time difference
-                        const currentTime = new Date(node.userData.attributes.timestamp).getTime();
-                        const connectedTime = new Date(connectedNode.userData.attributes.timestamp).getTime();
-                        const timeDiff = connectedTime - currentTime;
-                        const isLater = timeDiff > 0;
-                        
-                        // Format time difference
-                        const absDays = Math.abs(Math.round(timeDiff / (1000 * 60 * 60 * 24)));
-                        const timeStr = absDays === 0 ? 'same day' : 
-                                      absDays === 1 ? '1 day' : 
-                                      `${absDays} days`;
-                        
-                        const connectionDiv = document.createElement('div');
-                        connectionDiv.className = `connection ${edge.userData.type.toLowerCase()}`;
-                        connectionDiv.innerHTML = `
-                            <div class="connection-header">
-                                <span class="temporal-indicator ${isLater ? 'later' : 'earlier'}">
-                                    ${isLater ? '+' : '-'}
-                                </span>
-                                <span class="connection-title">${connectedNode.userData.attributes.name}</span>
-                                <span class="time-diff ${isLater ? 'later' : 'earlier'}">
-                                    ${timeStr}
-                                </span>
-                            </div>
-                            <div class="connection-desc">${edge.userData.description}</div>
-                        `;
-                        
-                        // Add hover effect
-                        connectionDiv.addEventListener('mouseenter', () => {
-                            connectionDiv.style.background = 'rgba(0, 170, 255, 0.2)';
+                streamElement({
+                    tag: 'div',
+                    className: 'connections',
+                    html: '<h4>Connected Events:</h4>',
+                    container,
+                    afterCreate: (el) => {
+                        // Stream in each connection
+                        connections.forEach((edge, index) => {
+                            setTimeout(() => {
+                                addConnectionElement(edge, node, el);
+                            }, index * 100); // Stagger the connections
                         });
-                        connectionDiv.addEventListener('mouseleave', () => {
-                            connectionDiv.style.background = 'rgba(0, 170, 255, 0.1)';
-                        });
-                        
-                        // Add click handler
-                        connectionDiv.addEventListener('click', () => {
-                            // Simulate click on the connected node
-                            const fakeEvent = {
-                                clientX: 0,
-                                clientY: 0
-                            };
-                            raycaster.setFromCamera(mouse, camera);
-                            onMouseClick(fakeEvent, connectedNode);
-                        });
-                        
-                        connectionsEl.appendChild(connectionDiv);
-                    }
-                });
-                
-                document.getElementById('event-description').appendChild(connectionsEl);
-            }
-            
-            // Highlight selected node and its connections
-            nodes.forEach(n => {
-                // Reset all nodes to default state
-                n.material.emissive.setHex(0x003366);
-                n.material.opacity = 0.7;
-                if (n.particles) {
-                    n.particles.forEach(p => p.material.opacity = 0.3);
-                }
-            });
-
-            // Highlight selected node
-            node.material.emissive.setHex(0x00aaff);
-            node.material.opacity = 1;
-            if (node.particles) {
-                node.particles.forEach(p => {
-                    p.material.opacity = 1;
-                    // Enhance the glow effect for dates
-                    if (p.userData.dataType === 'date') {
-                        p.material.color.setHex(0x00ffff);
                     }
                 });
             }
+        }
 
-            // Highlight connected edges
-            edges.forEach(edge => {
-                const isConnected = 
-                    edge.userData.source === node.userData.key || 
-                    edge.userData.target === node.userData.key;
-                edge.material.opacity = isConnected ? 0.8 : 0.1;
-            });
+        function streamElement({ tag, className, html, container, onClick = null, afterCreate = null }) {
+            const el = document.createElement(tag);
+            el.className = className;
+            el.style.opacity = '0';
+            el.innerHTML = html;
             
-            // Show the panel with a fade effect
-            panel.style.display = 'block';
-            panel.style.opacity = 0;
+            if (onClick) {
+                el.style.cursor = 'pointer';
+                el.addEventListener('click', onClick);
+            }
+            
+            container.appendChild(el);
+            
+            // Fade in effect
             setTimeout(() => {
-                panel.style.opacity = 1;
+                el.style.transition = 'opacity 0.3s ease';
+                el.style.opacity = '1';
+                if (afterCreate) afterCreate(el);
             }, 10);
+        }
+
+        function addConnectionElement(edge, currentNode, container) {
+            const connectedNodeKey = edge.userData.source === currentNode.userData.key ? 
+                edge.userData.target : edge.userData.source;
+            const connectedNode = nodes.find(n => n.userData.key === connectedNodeKey);
+            
+            if (connectedNode) {
+                const currentTime = new Date(currentNode.userData.attributes.timestamp).getTime();
+                const connectedTime = new Date(connectedNode.userData.attributes.timestamp).getTime();
+                const timeDiff = connectedTime - currentTime;
+                const isLater = timeDiff > 0;
+                
+                const absDays = Math.abs(Math.round(timeDiff / (1000 * 60 * 60 * 24)));
+                const timeStr = absDays === 0 ? 'same day' : 
+                              absDays === 1 ? '1 day' : 
+                              `${absDays} days`;
+                
+                streamElement({
+                    tag: 'div',
+                    className: `connection ${edge.userData.type.toLowerCase()}`,
+                    html: `
+                        <div class="connection-header">
+                            <span class="temporal-indicator ${isLater ? 'later' : 'earlier'}">
+                                ${isLater ? '+' : '-'}
+                            </span>
+                            <span class="connection-title">${connectedNode.userData.attributes.name}</span>
+                            <span class="time-diff ${isLater ? 'later' : 'earlier'}">
+                                ${timeStr}
+                            </span>
+                        </div>
+                        <div class="connection-desc">${edge.userData.description}</div>
+                    `,
+                    container,
+                    onClick: () => onMouseClick(null, connectedNode)
+                });
+            }
+        }
+
+        function toggleGeneratedEvents(generatedNodes, container) {
+            const existingGenerated = document.querySelector('.generated-events');
+            if (existingGenerated) {
+                existingGenerated.remove();
+            } else {
+                streamElement({
+                    tag: 'div',
+                    className: 'generated-events',
+                    html: `
+                        <h4>Generated from this prompt:</h4>
+                        ${generatedNodes.map(n => `
+                            <div class="generated-event" data-node-key="${n.userData.key}">
+                                <span class="event-name">${n.userData.attributes.name}</span>
+                                <div class="event-date">${new Date(n.userData.attributes.timestamp)
+                                    .toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short'
+                                    })}
+                                </div>
+                            </div>
+                        `).join('')}
+                    `,
+                    container,
+                    afterCreate: (el) => {
+                        el.querySelectorAll('.generated-event').forEach(eventEl => {
+                            eventEl.style.cursor = 'pointer';
+                            eventEl.addEventListener('click', () => {
+                                const generatedNode = nodes.find(n => n.userData.key === eventEl.dataset.nodeKey);
+                                if (generatedNode) {
+                                    onMouseClick(null, generatedNode);
+                                }
+                            });
+                        });
+                    }
+                });
+            }
         }
 
         function updateEdgePositions() {
@@ -1259,6 +1421,13 @@
                     scene.add(labelSprite);
                 });
             } else {
+                // Clean up any remaining cluster labels before switching layouts
+                scene.children.forEach(child => {
+                    if (child.isClusterLabel) {
+                        cleanupSprite(child);
+                    }
+                });
+
                 nodes.forEach((node, i) => {
                     let targetPosition;
                     
@@ -1445,6 +1614,89 @@
                 requestAnimationFrame(update);
             }
             update();
+        }
+
+        function addNextEventButton(currentNode, panel) {
+            // Remove any existing button containers first
+            const existingButtons = panel.querySelectorAll('.next-event-button-container');
+            existingButtons.forEach(button => button.remove());
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'next-event-button-container'; // Add class for easy cleanup
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = '10px';
+            buttonContainer.style.marginTop = '15px';
+
+            // Get current timestamp
+            const currentTime = new Date(currentNode.userData.attributes.timestamp).getTime();
+            
+            // Find the next chronological node
+            const nextNode = nodes
+                .filter(node => 
+                    new Date(node.userData.attributes.timestamp).getTime() > currentTime
+                )
+                .sort((a, b) => 
+                    new Date(a.userData.attributes.timestamp).getTime() - 
+                    new Date(b.userData.attributes.timestamp).getTime()
+                )[0];  // Get the first (closest) node
+
+            // Create next event button
+            const button = document.createElement('button');
+            button.className = 'next-event-button';
+            
+            // Create auto-advance toggle
+            const autoButton = document.createElement('button');
+            autoButton.className = `next-event-button auto-advance ${autoAdvanceEnabled ? 'active' : ''}`;
+            autoButton.style.width = 'auto'; // Override full width
+            autoButton.style.minWidth = '80px';
+            autoButton.innerHTML = `Auto ${autoAdvanceEnabled ? 'ON' : 'OFF'}`;
+
+            if (nextNode) {
+                const timeDiff = Math.round((new Date(nextNode.userData.attributes.timestamp).getTime() - 
+                                           currentTime) / (1000 * 60 * 60 * 24));
+                button.innerHTML = `
+                    <span>Next Event</span>
+                    <span class="time-diff later">(+${timeDiff} days)</span>
+                `;
+                
+                // Auto advance functionality
+                const advanceToNext = () => {
+                    if (autoAdvanceEnabled) {
+                        setTimeout(() => {
+                            onMouseClick(null, nextNode);
+                        }, 1000);
+                    }
+                };
+
+                button.addEventListener('click', () => {
+                    onMouseClick(null, nextNode);
+                });
+
+                // Add auto button click handler
+                autoButton.addEventListener('click', () => {
+                    autoAdvanceEnabled = !autoAdvanceEnabled;
+                    localStorage.setItem('autoAdvanceEnabled', autoAdvanceEnabled);
+                    autoButton.innerHTML = `Auto ${autoAdvanceEnabled ? 'ON' : 'OFF'}`;
+                    autoButton.classList.toggle('active');
+                    if (autoAdvanceEnabled) advanceToNext();
+                });
+
+                // Trigger auto advance if enabled
+                advanceToNext();
+            } else {
+                button.innerHTML = `<span>No Future Events</span>`;
+                button.disabled = true;
+                autoButton.disabled = true;
+            }
+            
+            buttonContainer.appendChild(button);
+            buttonContainer.appendChild(autoButton);
+            panel.appendChild(buttonContainer);
+
+            // Debug logging
+            console.log('Current node:', currentNode.userData.attributes.name);
+            console.log('Next node:', nextNode ? nextNode.userData.attributes.name : 'None');
+            console.log('Button container added:', buttonContainer);
         }
 
         init();
