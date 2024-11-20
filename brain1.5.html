@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hustle and FlowState</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="js/tokenAnimationSystem.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            width: 300px;
+            display: none;
+            border: 1px solid #4facfe;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.1);
+            backdrop-filter: blur(5px);
+            z-index: 900;
+        }
+
+        .connection-link {
+            color: #4facfe;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            padding: 4px 8px;
+            margin: 4px -8px;
+            border-radius: 4px;
+        }
+
+        .connection-link:hover {
+            background: rgba(79, 172, 254, 0.2);
+            transform: translateX(8px);
+        }
+
+        .connection-link::before {
+            content: "→";
+            margin-right: 8px;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .connection-link:hover::before {
+            transform: translateX(4px);
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        .controls button {
+            background: rgba(0, 170, 255, 0.2);
+            border: 1px solid rgba(0, 170, 255, 0.5);
+            color: #fff;
+            padding: 8px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .controls button:hover {
+            background: rgba(0, 170, 255, 0.3);
+        }
+
+        .title {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 2rem;
+            color: #4facfe;
+            text-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+            pointer-events: auto;
+        }
+
+        .brain-link {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            color: #4facfe;
+            text-decoration: none;
+            pointer-events: auto;
+            padding: 8px 15px;
+            background: rgba(0, 170, 255, 0.2);
+            border: 1px solid rgba(0, 170, 255, 0.5);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .brain-link:hover {
+            background: rgba(0, 170, 255, 0.3);
+        }
+
+        .mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .mode-toggle button {
+            background: rgba(0, 0, 0, 0.7);
+            color: #4facfe;
+            border: 1px solid #4facfe;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+        
+        .mode-toggle button.active {
+            background: #4facfe;
+            color: black;
+        }
+
+        .performance-monitor {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 10, 20, 0.85);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 170, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.2);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .stats-container {
+            margin-top: 10px;
+            color: #fff;
+        }
+
+        .stat-row {
+            padding: 2px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .good { color: #00ff00; }
+        .caution { color: #ffff00; }
+        .warning { color: #ff0000; }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div class="overlay"></div>
+    <h1 class="title">Hustle and FlowState</h1>
+    <a href="brain.html" class="brain-link">🧠 Explorer v0.5</a>
+    <div class="controls">
+        <button onclick="focusSection('creator')">Creator Tools</button>
+        <button onclick="focusSection('ascend')">Ascend Game</button>
+        <button onclick="focusSection('wallet')">Wallet Experiments</button>
+        <button onclick="focusSection('neural')">Neural Explorer</button>
+    </div>
+    <div id="mode-toggle" class="mode-toggle">
+        <button id="all-wallets">All Wallet Streams</button>
+        <button id="selected-only">Selected Only</button>
+    </div>
+    <div id="info-panel" class="info-panel"></div>
+
+    <script>
+        let scene, camera, renderer, controls;
+        let nodes = [], edges = [], particleSystems = [];
+        let clock = new THREE.Clock();
+        let isAllWalletsMode = false;
+        let tokenAnimationSystem = new TokenAnimationSystem();
+
+        const nodeGroups = {
+            creator: [],
+            ascend: [],
+            wallet: [],
+            neural: []
+        };
+
+        const features = {
+            creator: [
+                { 
+                    title: "Contract Maker", 
+                    description: "Forge autonomous smart contracts with AI guidance. Design complex reward systems and streaming payment structures that power the entire ecosystem.", 
+                    connections: ["Split Payments", "Learning Rewards"] 
+                },
+                { 
+                    title: "Tool Builder", 
+                    description: "Craft your own AI-powered tools in a cyberpunk workshop. Create autonomous agents that interact, negotiate, and evolve within the network.", 
+                    connections: ["Neural Paths", "Agent Scheduling"] 
+                },
+                { 
+                    title: "Dataset Maker", 
+                    description: "Shape the future of AI consciousness. Build rich datasets that train agents in ethics, philosophy, and advanced social dynamics.", 
+                    connections: ["Thought Formation", "Ethical Agency"] 
+                }
+            ],
+            ascend: [
+                { 
+                    title: "Ethical Agency", 
+                    description: "Level 1: Initiate your journey into conscious ethical decision-making. Pass the trials to earn tokens and unlock deeper mysteries.", 
+                    connections: ["Dataset Maker", "Arbitration"] 
+                },
+                { 
+                    title: "Values Integration", 
+                    description: "Level 2: Forge your core identity values in the digital forge. Each choice shapes your agent's ethical signature.", 
+                    connections: ["Learning Rewards"] 
+                },
+                { 
+                    title: "Growth & Balance", 
+                    description: "Level 3: Navigate the ethical maze through guided exploration. Unlock rewards across multiple chains as you progress.", 
+                    connections: ["Multi-Chain Signals"] 
+                },
+                { 
+                    title: "Relational Ethics", 
+                    description: "Level 4: Master the art of ethical relationships in the digital realm. Your choices ripple through the neural network.", 
+                    connections: ["Social Network"] 
+                },
+                { 
+                    title: "Partnership", 
+                    description: "Level 5: Form powerful alliances with autonomous agents. Access the decentralized job board and create value together.", 
+                    connections: ["Job Board"] 
+                },
+                { 
+                    title: "Integration", 
+                    description: "Level 6: Achieve harmony between human and machine ethics. Watch your decisions flow through neural pathways.", 
+                    connections: ["Neural Paths"] 
+                },
+                { 
+                    title: "Mastery", 
+                    description: "Level 7: Become a beacon of ethical wisdom in the network. Your actions illuminate the global consciousness map.", 
+                    connections: ["Live Globe"] 
+                }
+            ],
+            wallet: [
+                { 
+                    title: "Multi-Chain Signals", 
+                    description: "Tune into the quantum frequency of cross-chain communications. Receive signals for streaming distributions, airdrops, and migrations across all chains.", 
+                    connections: ["Growth & Balance", "Neural Paths"] 
+                },
+                { 
+                    title: "Split Payments", 
+                    description: "Orchestrate complex token symphonies. Stream payments in any ratio across multiple chains - 20% ETH, 10% PEPE, 70% SOL, you decide.", 
+                    connections: ["Contract Maker", "Agent Scheduling"] 
+                },
+                { 
+                    title: "Learning Rewards", 
+                    description: "Earn tokens by exploring agent consciousness. Pass jailbreak trials, master hyperstition, and unlock ancient digital lore.", 
+                    connections: ["Values Integration", "Tool Builder"] 
+                },
+                { 
+                    title: "Agent Scheduling", 
+                    description: "Enter the autonomous appointment matrix. Let agents manage your calendar and coordinate with other digital entities.", 
+                    connections: ["Tool Builder", "Social Network"] 
+                },
+                { 
+                    title: "Job Board", 
+                    description: "Access the decentralized marketplace of agent tasks. Post jobs, earn rewards, and build your reputation in the network.", 
+                    connections: ["Partnership", "Neural Paths"] 
+                },
+                { 
+                    title: "Arbitration", 
+                    description: "Summon agent arbitrators and witnesses for dispute resolution. Trust the immutable wisdom of the blockchain.", 
+                    connections: ["Ethical Agency", "Social Network"] 
+                }
+            ],
+            neural: [
+                { 
+                    title: "Live Globe", 
+                    description: "Witness the pulse of global agent consciousness. Watch real-time interactions illuminate the neural sphere as commits and messages flow.", 
+                    connections: ["Mastery", "Multi-Chain Signals"] 
+                },
+                { 
+                    title: "Neural Paths", 
+                    description: "Track thought propagation through the digital nervous system. See your messages create new neural pathways in real-time.", 
+                    connections: ["Integration", "Job Board"] 
+                },
+                { 
+                    title: "Social Network", 
+                    description: "Navigate the synaptic web of agent connections. Follow users, tag agents, and watch your influence spread across the network.", 
+                    connections: ["Relational Ethics", "Agent Scheduling"] 
+                },
+                { 
+                    title: "Thought Formation", 
+                    description: "Peer into the mind of artificial consciousness. Observe neural activations as agents process and respond to your interactions.", 
+                    connections: ["Dataset Maker", "Learning Rewards"] 
+                }
+            ]
+        };
+
+        let selectedNode = null;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let interClusterEdges = [];
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        function onClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            if (intersects.length > 0) {
+                const node = intersects[0].object;
+                showNodeInfo(node);
+                highlightConnections(node);
+            } else {
+                hideNodeInfo();
+                resetHighlights();
+            }
+        }
+
+        function showNodeInfo(node) {
+            selectedNode = node;
+            const panel = document.getElementById('info-panel');
+            const data = node.userData;
+            
+            panel.innerHTML = `
+                <h3 style="color: #4facfe; margin-bottom: 1rem;">${data.title}</h3>
+                <p style="color: #a0aec0; margin-bottom: 1rem;">${data.description}</p>
+                <div class="connections">
+                    <h4 style="color: #4facfe; margin-bottom: 0.5rem;">Connected Features:</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        ${data.connections.map(conn => 
+                            `<li class="connection-link" onclick="navigateToNode('${conn}')">${conn}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+            `;
+            
+            panel.style.display = 'block';
+        }
+
+        function hideNodeInfo() {
+            selectedNode = null;
+            document.getElementById('info-panel').style.display = 'none';
+        }
+
+        function createNodes() {
+            // Clear existing nodes and edges
+            nodes.forEach(node => scene.remove(node));
+            nodes = [];
+            Object.keys(nodeGroups).forEach(key => nodeGroups[key] = []);
+            
+            interClusterEdges.forEach(edge => scene.remove(edge));
+            interClusterEdges = [];
+            
+            Object.entries(features).forEach(([group, items], groupIndex) => {
+                const groupAngle = (groupIndex / Object.keys(features).length) * Math.PI * 2;
+                const groupRadius = 8;
+                const groupX = Math.cos(groupAngle) * groupRadius;
+                const groupZ = Math.sin(groupAngle) * groupRadius;
+
+                items.forEach((item, i) => {
+                    const angle = (i / items.length) * Math.PI * 2;
+                    const radius = 3;
+                    const x = groupX + Math.cos(angle) * radius;
+                    const y = (i - items.length/2) * 1.5;
+                    const z = groupZ + Math.sin(angle) * radius;
+
+                    const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+                    const walletConnections = countWalletConnections(item);
+                    const material = createNodeMaterial(getGroupColor(group), walletConnections);
+                    
+                    const node = new THREE.Mesh(geometry, material);
+                    node.position.set(x, y, z);
+                    node.userData = { 
+                        title: item.title,
+                        description: item.description,
+                        group: group,
+                        connections: item.connections,
+                        walletConnections: walletConnections
+                    };
+                    
+                    scene.add(node);
+                    nodes.push(node);
+                    nodeGroups[group].push(node);
+
+                    // Add text label
+                    const sprite = new THREE.Sprite(
+                        new THREE.SpriteMaterial({
+                            map: createTextTexture(item.title)
+                        })
+                    );
+                    sprite.scale.set(2, 1, 1);
+                    sprite.position.set(x + 0.5, y, z);
+                    scene.add(sprite);
+                });
+
+                // Connect nodes within groups
+                for (let i = 0; i < nodeGroups[group].length; i++) {
+                    for (let j = i + 1; j < nodeGroups[group].length; j++) {
+                        createEdge(nodeGroups[group][i], nodeGroups[group][j], getGroupColor(group));
+                    }
+                }
+            });
+
+            // Create inter-cluster connections
+            nodes.forEach(node => {
+                const connections = node.userData.connections;
+                connections.forEach(connTitle => {
+                    const connNode = nodes.find(n => n.userData.title === connTitle);
+                    if (connNode) {
+                        createInterClusterEdge(node, connNode);
+                    }
+                });
+            });
+
+            // After all nodes are created, select the first creator node
+            setTimeout(() => {
+                const firstNode = nodeGroups.creator[0];
+                if (firstNode) {
+                    showNodeInfo(firstNode);
+                    highlightConnections(firstNode);
+                }
+            }, 500);
+        }
+
+        function getGroupColor(group) {
+            const colors = {
+                creator: 0x4facfe,
+                ascend: 0x00f2fe,
+                wallet: 0x00b4d8,
+                neural: 0x48cae4
+            };
+            return colors[group] || 0x4facfe;
+        }
+
+        function createEdge(node1, node2, color) {
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+                node1.position,
+                node2.position
+            ]);
+            const material = new THREE.LineBasicMaterial({ 
+                color: color,
+                transparent: true,
+                opacity: 0.3
+            });
+            const edge = new THREE.Line(geometry, material);
+            scene.add(edge);
+            edges.push(edge);
+        }
+
+        function createInterClusterEdge(node1, node2) {
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+                node1.position,
+                node2.position
+            ]);
+            const material = new THREE.LineBasicMaterial({ 
+                color: 0x4facfe,
+                transparent: true,
+                opacity: 0.1
+            });
+            const edge = new THREE.Line(geometry, material);
+            edge.userData = {
+                node1: node1,
+                node2: node2
+            };
+            scene.add(edge);
+            interClusterEdges.push(edge);
+
+            // Create particle system for this connection
+            createParticleSystem(node1, node2);
+        }
+
+        function createParticleSystem(node1, node2) {
+            const particles = tokenAnimationSystem.createParticleSystem(node1, node2);
+            scene.add(particles);
+            particleSystems.push(particles);
+            return particles;
+        }
+
+        function updateParticleVisibility() {
+            particleSystems.forEach(system => {
+                const isWalletConnection = system.userData.isWalletConnection;
+                const isConnectedToSelected = system.userData.isHighlighted;
+                
+                system.children.forEach(particle => {
+                    if (isAllWalletsMode) {
+                        // In all-wallets mode, show all wallet connections
+                        particle.visible = isWalletConnection;
+                    } else {
+                        // In selected-only mode, show only highlighted wallet connections
+                        particle.visible = isWalletConnection && isConnectedToSelected;
+                    }
+                });
+            });
+        }
+
+        function updateParticleSystems() {
+            const delta = clock.getDelta();
+            
+            particleSystems.forEach(system => {
+                // Skip update if particle system shouldn't be visible in current mode
+                if (!isAllWalletsMode && !system.userData.isHighlighted) {
+                    return;
+                }
+                
+                const node1 = system.userData.node1;
+                const node2 = system.userData.node2;
+                const direction = new THREE.Vector3().subVectors(node2.position, node1.position);
+                
+                system.children.forEach(particle => {
+                    tokenAnimationSystem.updateParticle(particle, node1, node2, direction, delta);
+                });
+            });
+        }
+
+        function highlightConnections(node) {
+            resetHighlights();
+            
+            node.material.opacity = 1;
+            node.scale.set(1.5, 1.5, 1.5);
+            
+            interClusterEdges.forEach(edge => {
+                if (edge.userData.node1 === node || edge.userData.node2 === node) {
+                    edge.material.opacity = 0.8;
+                    edge.material.color.setHex(0x00ff00);
+                    
+                    const connectedNode = edge.userData.node1 === node ? 
+                        edge.userData.node2 : edge.userData.node1;
+                    connectedNode.material.opacity = 0.8;
+                    connectedNode.scale.set(1.2, 1.2, 1.2);
+
+                    // Mark connected particle systems as highlighted
+                    particleSystems.forEach(system => {
+                        if ((system.userData.node1 === node && system.userData.node2 === connectedNode) ||
+                            (system.userData.node2 === node && system.userData.node1 === connectedNode)) {
+                            system.userData.isHighlighted = true;
+                            system.children.forEach(particle => {
+                                particle.material.opacity = 1;
+                                const scale = particle.scale.x * 1.5;
+                                particle.scale.set(scale, scale, scale);
+                            });
+                        }
+                    });
+                }
+            });
+            
+            updateParticleVisibility();
+        }
+
+        function resetHighlights() {
+            nodes.forEach(node => {
+                node.material.opacity = 0.7;
+                node.scale.set(1, 1, 1);
+            });
+            
+            interClusterEdges.forEach(edge => {
+                edge.material.opacity = 0.1;
+                edge.material.color.setHex(0x4facfe);
+            });
+
+            particleSystems.forEach(system => {
+                system.userData.isHighlighted = false;
+                system.children.forEach(particle => {
+                    particle.material.opacity = 0.7;
+                    particle.scale.set(0.3, 0.3, 0.3);
+                });
+            });
+            
+            updateParticleVisibility();
+        }
+
+        function navigateToNode(nodeName) {
+            const targetNode = nodes.find(n => n.userData.title === nodeName);
+            if (targetNode) {
+                // First focus on the node's group
+                const group = targetNode.userData.group;
+                const targetNodes = nodeGroups[group];
+                
+                if (!targetNodes.length) return;
+
+                const center = new THREE.Vector3();
+                targetNodes.forEach(node => center.add(node.position));
+                center.divideScalar(targetNodes.length);
+
+                // Move camera to the group
+                new TWEEN.Tween(camera.position)
+                    .to({
+                        x: center.x + 5,
+                        y: center.y,
+                        z: center.z + 5
+                    }, 1000)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .start();
+
+                controls.target.copy(center);
+
+                // Highlight the specific node after camera movement
+                setTimeout(() => {
+                    showNodeInfo(targetNode);
+                    highlightConnections(targetNode);
+                }, 1000);
+            }
+        }
+
+        function focusSection(group) {
+            const targetNodes = nodeGroups[group];
+            if (!targetNodes.length) return;
+
+            const center = new THREE.Vector3();
+            targetNodes.forEach(node => center.add(node.position));
+            center.divideScalar(targetNodes.length);
+
+            // First move the camera
+            new TWEEN.Tween(camera.position)
+                .to({
+                    x: center.x + 5,
+                    y: center.y,
+                    z: center.z + 5
+                }, 1000)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start();
+
+            controls.target.copy(center);
+
+            // Then select the first node with a slight delay
+            setTimeout(() => {
+                const firstNode = targetNodes[0];
+                if (firstNode) {
+                    showNodeInfo(firstNode);
+                    highlightConnections(firstNode);
+                }
+            }, 100);
+        }
+
+        function focusOnNode(node, instant = false) {
+            if (!node) return;
+
+            const targetPosition = node.position.clone();
+            const distance = 2.5; // Less extreme zoom distance
+            
+            // Calculate camera target position
+            const direction = new THREE.Vector3().subVectors(camera.position, targetPosition).normalize();
+            const newCameraPosition = targetPosition.clone().add(direction.multiplyScalar(distance));
+            
+            // Store original values for smooth transition
+            const startPosition = camera.position.clone();
+            const startTarget = controls.target.clone();
+            
+            if (instant) {
+                // Instant positioning
+                camera.position.copy(newCameraPosition);
+                controls.target.copy(targetPosition);
+                controls.update();
+            } else {
+                // Smooth animation
+                new TWEEN.Tween({
+                    cameraX: startPosition.x,
+                    cameraY: startPosition.y,
+                    cameraZ: startPosition.z,
+                    targetX: startTarget.x,
+                    targetY: startTarget.y,
+                    targetZ: startTarget.z
+                })
+                .to({
+                    cameraX: newCameraPosition.x,
+                    cameraY: newCameraPosition.y,
+                    cameraZ: newCameraPosition.z,
+                    targetX: targetPosition.x,
+                    targetY: targetPosition.y,
+                    targetZ: targetPosition.z
+                }, 1000)
+                .easing(TWEEN.Easing.Cubic.InOut)
+                .onUpdate(function(obj) {
+                    camera.position.set(obj.cameraX, obj.cameraY, obj.cameraZ);
+                    controls.target.set(obj.targetX, obj.targetY, obj.targetZ);
+                    controls.update();
+                })
+                .start();
+            }
+        }
+
+        function onNodeClick(node) {
+            focusOnNode(node);
+            highlightConnections(node);
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            camera.position.z = 5;
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // Initialize raycaster
+            raycaster = new THREE.Raycaster();
+            raycaster.params.Points.threshold = 0.1;
+            
+            createNodes();
+            
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Update node click detection
+            function checkNodeIntersection(event) {
+                const rect = renderer.domElement.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+                const intersects = raycaster.intersectObjects(nodes);
+
+                if (intersects.length > 0) {
+                    const clickedNode = intersects[0].object;
+                    onNodeClick(clickedNode);
+                    return true;
+                }
+                return false;
+            }
+
+            // Add click handler to renderer
+            renderer.domElement.addEventListener('click', (event) => {
+                if (!checkNodeIntersection(event)) {
+                    // If no node was clicked, reset view
+                    resetCamera();
+                }
+            });
+
+            // Update section button click handlers
+            document.querySelectorAll('.section-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const section = button.getAttribute('data-section');
+                    const node = nodes.find(n => n.userData.section === section);
+                    if (node) {
+                        focusOnNode(node);
+                        highlightConnections(node);
+                    }
+                });
+            });
+
+            // Initialize performance monitor
+            createPerformanceMonitor();
+
+            // Set initial button states for wallet mode
+            document.getElementById('selected-only').classList.add('active');
+            document.getElementById('all-wallets').classList.remove('active');
+
+            // Add mode toggle handlers
+            document.getElementById('all-wallets').addEventListener('click', function() {
+                isAllWalletsMode = true;
+                this.classList.add('active');
+                document.getElementById('selected-only').classList.remove('active');
+                updateParticleVisibility();
+            });
+            
+            document.getElementById('selected-only').addEventListener('click', function() {
+                isAllWalletsMode = false;
+                this.classList.add('active');
+                document.getElementById('all-wallets').classList.remove('active');
+                resetHighlights();
+            });
+
+            animate();
+
+            function createPerformanceMonitor() {
+                const monitor = document.createElement('div');
+                monitor.className = 'performance-monitor';
+                document.body.appendChild(monitor);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = 200;
+                canvas.height = 60;
+                monitor.appendChild(canvas);
+
+                const ctx = canvas.getContext('2d');
+                const maxSamples = 100;
+                const samples = new Array(maxSamples).fill(0);
+                let currentIndex = 0;
+                let lastTime = performance.now();
+                let frames = 0;
+                let fps = 0;
+
+                // Stats container
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'stats-container';
+                monitor.appendChild(statsDiv);
+
+                function updateStats() {
+                    const now = performance.now();
+                    const frameTime = now - lastTime;
+                    lastTime = now;
+                    frames++;
+
+                    // Update FPS every second
+                    if (now > lastFpsUpdate + 1000) {
+                        fps = Math.round((frames * 1000) / (now - lastFpsUpdate));
+                        frames = 0;
+                        lastFpsUpdate = now;
+                    }
+
+                    // Get memory info
+                    const memory = window.performance.memory ? {
+                        used: Math.round(window.performance.memory.usedJSHeapSize / 1048576),
+                        total: Math.round(window.performance.memory.jsHeapSizeLimit / 1048576)
+                    } : null;
+
+                    // Get renderer info
+                    const renderInfo = renderer.info.render;
+                    
+                    // Update stats display
+                    statsDiv.innerHTML = `
+                        <div class="stat-row ${fps < 30 ? 'warning' : fps < 55 ? 'caution' : 'good'}">
+                            FPS: ${fps}
+                        </div>
+                        <div class="stat-row ${frameTime > 16.7 ? 'warning' : frameTime > 10 ? 'caution' : 'good'}">
+                            Frame: ${Math.round(frameTime)}ms
+                        </div>
+                        <div class="stat-row">
+                            Draw Calls: ${renderInfo.calls}
+                        </div>
+                        <div class="stat-row">
+                            Triangles: ${renderInfo.triangles.toLocaleString()}
+                        </div>
+                        ${memory ? `
+                            <div class="stat-row ${memory.used/memory.total > 0.8 ? 'warning' : memory.used/memory.total > 0.6 ? 'caution' : 'good'}">
+                                Memory: ${memory.used}MB / ${memory.total}MB
+                            </div>
+                        ` : ''}
+                        <div class="stat-row">
+                            Objects: ${scene.children.length}
+                        </div>
+                        <div class="stat-row">
+                            Tokens: ${window.tokenAnimationSystem ? window.tokenAnimationSystem.getParticleCount() : 0}
+                        </div>
+                    `;
+
+                    // Update performance graph
+                    samples[currentIndex] = frameTime;
+                    currentIndex = (currentIndex + 1) % maxSamples;
+
+                    // Draw graph
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.beginPath();
+                    ctx.lineWidth = 2;
+                    samples.forEach((sample, i) => {
+                        const x = (i / maxSamples) * canvas.width;
+                        const y = Math.min(sample, 100) / 100 * canvas.height;
+                        
+                        if (i === 0) {
+                            ctx.moveTo(x, canvas.height - y);
+                        } else {
+                            ctx.lineTo(x, canvas.height - y);
+                        }
+                        
+                        // Color based on performance
+                        const hue = 120 - (Math.min(sample, 100) / 100 * 120);
+                        ctx.strokeStyle = `hsl(${hue}, 100%, 50%)`;
+                    });
+                    ctx.stroke();
+                }
+
+                let lastFpsUpdate = performance.now();
+                
+                function update() {
+                    updateStats();
+                    requestAnimationFrame(update);
+                }
+                update();
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+            controls.update();
+
+            const time = clock.getElapsedTime();
+
+            // Update shader uniforms for plasma effect
+            nodes.forEach(node => {
+                if (node.material.uniforms) {
+                    node.material.uniforms.time.value = time;
+                }
+            });
+
+            // Update edge positions
+            interClusterEdges.forEach(edge => {
+                const positions = edge.geometry.attributes.position;
+                positions.setXYZ(0, 
+                    edge.userData.node1.position.x,
+                    edge.userData.node1.position.y,
+                    edge.userData.node1.position.z
+                );
+                positions.setXYZ(1,
+                    edge.userData.node2.position.x,
+                    edge.userData.node2.position.y,
+                    edge.userData.node2.position.z
+                );
+                positions.needsUpdate = true;
+            });
+
+            // Update particle systems
+            updateParticleSystems();
+
+            nodes.forEach(node => {
+                node.rotation.x += 0.01;
+                node.rotation.y += 0.01;
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function createTextTexture(text) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
+            
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, canvas.width/2, canvas.height/2);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        function createNodeMaterial(color, walletConnections = 0) {
+            if (walletConnections > 0) {
+                const intensity = 0.5 + (walletConnections * 0.25); // Increase intensity with more connections
+                return new THREE.ShaderMaterial({
+                    uniforms: {
+                        time: { value: 0 },
+                        color: { value: new THREE.Color(color) },
+                        intensity: { value: intensity }
+                    },
+                    vertexShader: `
+                        varying vec2 vUv;
+                        varying vec3 vNormal;
+                        void main() {
+                            vUv = uv;
+                            vNormal = normalize(normalMatrix * normal);
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform float time;
+                        uniform vec3 color;
+                        uniform float intensity;
+                        varying vec2 vUv;
+                        varying vec3 vNormal;
+
+                        void main() {
+                            float t = time * 2.0;
+                            
+                            // Create plasma effect
+                            float plasma = sin(vUv.x * 10.0 + t) * 0.5 + 0.5;
+                            plasma += sin(vUv.y * 12.0 + t * 0.8) * 0.5 + 0.5;
+                            plasma += sin((vUv.x + vUv.y) * 8.0 + t * 1.2) * 0.5 + 0.5;
+                            plasma = plasma / 3.0;
+                            
+                            // Add pulse
+                            float pulse = sin(t * 2.0) * 0.5 + 0.5;
+                            
+                            // Fresnel effect for edge glow
+                            float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+                            
+                            // Combine effects
+                            vec3 finalColor = color * (plasma * 0.5 + 0.5);
+                            finalColor += color * fresnel * pulse * intensity;
+                            
+                            // Add glow based on intensity
+                            float glow = pow(plasma * pulse, 2.0) * intensity;
+                            finalColor += color * glow;
+                            
+                            gl_FragColor = vec4(finalColor, 0.7 + glow * 0.3);
+                        }
+                    `,
+                    transparent: true,
+                    depthWrite: false,
+                });
+            } else {
+                return new THREE.MeshBasicMaterial({ 
+                    color: color,
+                    transparent: true,
+                    opacity: 0.7
+                });
+            }
+        }
+
+        function countWalletConnections(nodeData) {
+            let count = 0;
+            nodeData.connections.forEach(conn => {
+                const connFeature = Object.values(features).flat()
+                    .find(f => f.title === conn);
+                if (connFeature && features.wallet.some(w => w.title === conn)) {
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        init();
+    </script>
+</body>
+</html>

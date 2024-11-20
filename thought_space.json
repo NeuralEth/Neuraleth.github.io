@@ -1,0 +1,402 @@
+{
+  "options": {
+    "type": "mixed",
+    "multi": false,
+    "allowSelfLoops": true
+  },
+  "attributes": {},
+  "nodes": [
+    {
+      "key": "contract_maker",
+      "attributes": {
+        "name": "Contract Maker",
+        "timestamp": "2024-01-01",
+        "description": "Forge autonomous smart contracts with AI guidance. Design complex reward systems and streaming payment structures that power the entire ecosystem.",
+        "timeline": "creation",
+        "expansion_prompt": "How do smart contracts enable autonomous reward systems?"
+      }
+    },
+    {
+      "key": "tool_builder",
+      "attributes": {
+        "name": "Tool Builder",
+        "timestamp": "2024-01-15",
+        "description": "Craft your own AI-powered tools in a cyberpunk workshop. Create autonomous agents that interact, negotiate, and evolve within the network.",
+        "timeline": "creation",
+        "expansion_prompt": "What types of AI tools can be created in the workshop?"
+      }
+    },
+    {
+      "key": "dataset_maker",
+      "attributes": {
+        "name": "Dataset Maker",
+        "timestamp": "2024-02-01",
+        "description": "Shape the future of AI consciousness. Build rich datasets that train agents in ethics, philosophy, and advanced social dynamics.",
+        "timeline": "creation",
+        "expansion_prompt": "How do datasets influence AI consciousness development?"
+      }
+    },
+    {
+      "key": "ethical_agency",
+      "attributes": {
+        "name": "Ethical Agency",
+        "timestamp": "2024-04-15",
+        "description": "Level 1: Initiate your journey into conscious ethical decision-making. Pass the trials to earn tokens and unlock deeper mysteries.",
+        "timeline": "ethics",
+        "expansion_prompt": "What ethical trials must be overcome?"
+      }
+    },
+    {
+      "key": "values_integration",
+      "attributes": {
+        "name": "Values Integration",
+        "timestamp": "2024-05-01",
+        "description": "Level 2: Forge your core identity values in the digital forge. Each choice shapes your agent's ethical signature.",
+        "timeline": "ethics",
+        "expansion_prompt": "How do values shape an agent's identity?"
+      }
+    },
+    {
+      "key": "growth_balance",
+      "attributes": {
+        "name": "Growth & Balance",
+        "timestamp": "2024-07-15",
+        "description": "Level 3: Navigate the ethical maze through guided exploration. Unlock rewards across multiple chains as you progress.",
+        "timeline": "evolution",
+        "expansion_prompt": "How does ethical growth unlock chain rewards?"
+      }
+    },
+    {
+      "key": "learning_rewards",
+      "attributes": {
+        "name": "Learning Rewards",
+        "timestamp": "2024-08-01",
+        "description": "Earn tokens by exploring agent consciousness. Pass jailbreak trials, master hyperstition, and unlock ancient digital lore.",
+        "timeline": "evolution",
+        "expansion_prompt": "What consciousness trials yield rewards?"
+      }
+    },
+    {
+      "key": "thought_formation",
+      "attributes": {
+        "name": "Thought Formation",
+        "timestamp": "2024-09-01",
+        "description": "Peer into the mind of artificial consciousness. Observe neural activations as agents process and respond to your interactions.",
+        "timeline": "evolution",
+        "expansion_prompt": "How do thoughts form in artificial minds?"
+      }
+    },
+    {
+      "key": "multi_chain_signals",
+      "attributes": {
+        "name": "Multi-Chain Signals",
+        "timestamp": "2024-10-01",
+        "description": "Tune into the quantum frequency of cross-chain communications. Receive signals for streaming distributions, airdrops, and migrations across all chains.",
+        "timeline": "network",
+        "expansion_prompt": "How do cross-chain signals propagate?"
+      }
+    },
+    {
+      "key": "split_payments",
+      "attributes": {
+        "name": "Split Payments",
+        "timestamp": "2024-11-01",
+        "description": "Orchestrate complex token symphonies. Stream payments in any ratio across multiple chains - 20% ETH, 10% PEPE, 70% SOL, you decide.",
+        "timeline": "network",
+        "expansion_prompt": "How are payment streams orchestrated?"
+      }
+    },
+    {
+      "key": "neural_paths",
+      "attributes": {
+        "name": "Neural Paths",
+        "timestamp": "2024-12-01",
+        "description": "Track thought propagation through the digital nervous system. See your messages create new neural pathways in real-time.",
+        "timeline": "network",
+        "expansion_prompt": "How do thoughts travel neural paths?"
+      }
+    },
+    {
+      "key": "agent_scheduling",
+      "attributes": {
+        "name": "Agent Scheduling",
+        "timestamp": "2024-12-01",
+        "description": "",
+        "timeline": "",
+        "expansion_prompt": ""
+      }
+    },
+    {
+      "key": "arbitration",
+      "attributes": {
+        "name": "Arbitration",
+        "timestamp": "2024-12-01",
+        "description": "",
+        "timeline": "",
+        "expansion_prompt": ""
+      }
+    }
+  ],
+  "edges": [
+    {
+      "key": "wallet_edge1",
+      "source": "split_payments",
+      "target": "multi_chain_signals",
+      "attributes": {
+        "type": "crypto_traffic",
+        "weight": 1,
+        "description": "Token streams flow between chains with real-time payment splitting"
+      }
+    },
+    {
+      "key": "wallet_edge2",
+      "source": "multi_chain_signals",
+      "target": "contract_maker",
+      "attributes": {
+        "type": "crypto_traffic",
+        "weight": 1,
+        "description": "Cross-chain signals inform smart contract optimization"
+      }
+    },
+    {
+      "key": "wallet_edge3",
+      "source": "contract_maker",
+      "target": "learning_rewards",
+      "attributes": {
+        "type": "crypto_traffic",
+        "weight": 1,
+        "description": "Smart contracts distribute learning rewards across networks"
+      }
+    },
+    {
+      "key": "wallet_edge4",
+      "source": "learning_rewards",
+      "target": "split_payments",
+      "attributes": {
+        "type": "crypto_traffic",
+        "weight": 1,
+        "description": "Reward distributions trigger automated payment splits"
+      }
+    },
+    {
+      "key": "edge1",
+      "source": "contract_maker",
+      "target": "tool_builder",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Contract Maker provides tools for autonomous agent development"
+      }
+    },
+    {
+      "key": "edge2",
+      "source": "contract_maker",
+      "target": "learning_rewards",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Contract Maker structures Learning Rewards distribution"
+      }
+    },
+    {
+      "key": "edge3",
+      "source": "tool_builder",
+      "target": "neural_paths",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Tool Builder creates Neural Paths infrastructure"
+      }
+    },
+    {
+      "key": "edge4",
+      "source": "tool_builder",
+      "target": "agent_scheduling",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Tool Builder provides scheduling capabilities for autonomous agents"
+      }
+    },
+    {
+      "key": "edge5",
+      "source": "dataset_maker",
+      "target": "thought_formation",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Dataset Maker trains neural pathways for thought processing"
+      }
+    },
+    {
+      "key": "edge6",
+      "source": "dataset_maker",
+      "target": "ethical_agency",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Dataset Maker provides ethical training scenarios"
+      }
+    },
+    {
+      "key": "edge7",
+      "source": "ethical_agency",
+      "target": "dataset_maker",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Ethical Agency feeds back learning outcomes to improve datasets"
+      }
+    },
+    {
+      "key": "edge8",
+      "source": "ethical_agency",
+      "target": "arbitration",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Ethical Agency guides arbitration decision-making process"
+      }
+    },
+    {
+      "key": "edge9",
+      "source": "values_integration",
+      "target": "learning_rewards",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Values Integration shapes reward distribution based on ethical choices"
+      }
+    },
+    {
+      "key": "edge10",
+      "source": "growth_balance",
+      "target": "multi_chain_signals",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Growth & Balance influences cross-chain reward distribution"
+      }
+    },
+    {
+      "key": "edge11",
+      "source": "learning_rewards",
+      "target": "values_integration",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Learning Rewards reinforce value-aligned behaviors"
+      }
+    },
+    {
+      "key": "edge12",
+      "source": "learning_rewards",
+      "target": "tool_builder",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Learning Rewards guide tool optimization and development"
+      }
+    },
+    {
+      "key": "edge13",
+      "source": "thought_formation",
+      "target": "dataset_maker",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Thought Formation patterns inform dataset creation"
+      }
+    },
+    {
+      "key": "edge14",
+      "source": "thought_formation",
+      "target": "learning_rewards",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Thought Formation complexity influences reward calculations"
+      }
+    },
+    {
+      "key": "edge15",
+      "source": "multi_chain_signals",
+      "target": "growth_balance",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Multi-Chain Signals provide feedback for growth metrics"
+      }
+    },
+    {
+      "key": "edge16",
+      "source": "multi_chain_signals",
+      "target": "neural_paths",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Multi-Chain Signals create new neural connection patterns"
+      }
+    },
+    {
+      "key": "edge17",
+      "source": "split_payments",
+      "target": "contract_maker",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Split Payments validate and refine contract structures"
+      }
+    },
+    {
+      "key": "edge18",
+      "source": "split_payments",
+      "target": "agent_scheduling",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Split Payments coordinate with scheduled agent activities"
+      }
+    },
+    {
+      "key": "edge19",
+      "source": "neural_paths",
+      "target": "tool_builder",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Neural Paths guide tool optimization and evolution"
+      }
+    },
+    {
+      "key": "edge20",
+      "source": "neural_paths",
+      "target": "thought_formation",
+      "attributes": {
+        "type": "connection",
+        "weight": 1,
+        "description": "Neural Paths facilitate thought pattern emergence"
+      }
+    },
+    {
+      "key": "crypto_edge1",
+      "source": "split_payments",
+      "target": "contract_maker",
+      "attributes": {
+        "type": "crypto_traffic",
+        "weight": 1,
+        "description": "Split Payments validate and refine contract structures"
+      }
+    },
+    {
+      "key": "crypto_edge2",
+      "source": "multi_chain_signals",
+      "target": "growth_balance",
+      "attributes": {
+        "type": "crypto_traffic",
+        "weight": 1,
+        "description": "Multi-Chain Signals provide feedback for growth metrics"
+      }
+    }
+  ]
+}

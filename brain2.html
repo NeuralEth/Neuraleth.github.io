@@ -7,6 +7,7 @@
     <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <script src="https://unpkg.com/three-spritetext"></script>
+    <script src="js/brainTokenAnimation.js"></script>
     <style>
         * {
             margin: 0;
@@ -468,6 +469,49 @@
             background: rgba(0, 0, 0, 0.8);
             border: 1px solid rgba(0, 170, 255, 0.3);
         }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 10px;
+            color: white;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .speed-control input[type="range"] {
+            width: 200px; /* Increased width for better precision */
+            height: 4px;
+            background: #2a2a2a;
+            border-radius: 2px;
+            -webkit-appearance: none;
+        }
+
+        .speed-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px; /* Slightly smaller thumb for precision */
+            height: 12px;
+            background: #4CAF50;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .speed-control input[type="range"]::-webkit-slider-thumb:hover {
+            background: #45a049;
+        }
+
+        .speed-control label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .speed-value {
+            min-width: 45px;
+            font-size: 12px;
+            opacity: 0.8;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -478,6 +522,11 @@
         <button id="layout-sphere">Sphere</button>
         <button id="layout-grid">Grid</button>
         <button id="layout-temporal">Temporal</button>
+        <div class="speed-control">
+            <label>Token Speed:</label>
+            <input type="range" id="token-speed" min="0" max="20" value="6" step="0.01">
+            <span id="speed-value" class="speed-value">6.00x</span>
+        </div>
     </div>
     <div class="info-panel">
         <h3 id="event-title"></h3>
@@ -486,7 +535,7 @@
     </div>
 
     <script>
-        let scene, camera, renderer, nodes = [], edges = [];
+        let scene, camera, renderer, nodes = [], edges = [], particleSystems = [];
         let raycaster, mouse, controls;
         let showLabels = false;
         let selectedNode = null;
@@ -495,6 +544,18 @@
         let hoveredNode = null;
         let autoAdvanceEnabled = localStorage.getItem('autoAdvanceEnabled') === 'true';
         let currentAudioPlayer = null;
+        let tokenSystem = new BrainTokenAnimation();
+        let clock = new THREE.Clock();
+
+        // Add edge color definitions
+        const EDGE_COLORS = {
+            'connection': 0x0088cc,    // Default blue
+            'dependency': 0xff8800,    // Orange
+            'reference': 0x00ff88,     // Green
+            'evolution': 0xff00ff,     // Purple
+            'crypto_traffic': 0x88ff00,  // Bright green for crypto
+            'default': 0x0088cc       // Fallback color
+        };
 
         // Add texture cache and cleanup
         const textureCache = new Map();
@@ -599,6 +660,12 @@
                     }
                 });
             }
+
+            // Update particle systems
+            const delta = clock.getDelta();
+            particleSystems.forEach(system => {
+                tokenSystem.updateParticles(system, delta);
+            });
             
             controls.update();
             renderer.render(scene, camera);
@@ -664,33 +731,56 @@
             animate();
 
             createPerformanceMonitor();
+
+            // Add speed control
+            const speedSlider = document.getElementById('token-speed');
+            const speedValue = document.getElementById('speed-value');
+            
+            speedSlider.addEventListener('input', (e) => {
+                const speed = parseFloat(e.target.value);
+                // Update display with 2 decimal precision
+                speedValue.textContent = speed.toFixed(2) + 'x';
+                
+                tokenSystem.baseSpeed = speed;
+                tokenSystem.speedVariation = speed > 0 ? speed / 3 : 0;
+                
+                // Update existing particle systems
+                particleSystems.forEach(system => {
+                    system.children.forEach(particle => {
+                        // When speed is 0, all particles stop
+                        if (speed === 0) {
+                            particle.userData.speed = 0;
+                        } else {
+                            // More precise speed calculation
+                            particle.userData.speed = speed + (Math.random() - 0.5) * (speed / 3);
+                        }
+                    });
+                });
+            });
+
+            // Initialize speed value display
+            speedValue.textContent = speedSlider.value + 'x';
         }
 
         async function createTimelineGraph() {
-            // Clean up existing scene first
             cleanupScene();
             
             try {
-                const response = await fetch('/timeline_graph.json');
-                // const response = await fetch('/thought_space.json');
+                const response = await fetch('/thought_space.json');
                 const data = await response.json();
                 
-                // Add edge type colors
-                const EDGE_COLORS = {
-                    'CAUSES': 0x00aaff,
-                    'INFLUENCES': 0x00ff88,
-                    'THEORETICAL_DEVELOPMENT': 0xff00aa
-                };
-
-                // Create nodes
-                data.nodes.forEach((node, i) => {
+                // Filter out nodes with empty descriptions (duplicates/incomplete)
+                const validNodes = data.nodes.filter(node => node.attributes.description);
+                
+                // Create nodes only for valid entries
+                validNodes.forEach((node, i) => {
                     const geometry = new THREE.SphereGeometry(0.5, 16, 16);
                     const material = new THREE.MeshPhongMaterial({
                         color: 0x00aaff,
                         emissive: 0x003366,
                         shininess: 50
                     });
-
+                    
                     const mesh = new THREE.Mesh(geometry, material);
                     
                     // Position nodes in a spiral
@@ -719,10 +809,10 @@
                     createFloatingData(mesh);
                 });
 
-                // Create edges
+                // Update edge creation to only use valid nodes
                 data.edges.forEach(edge => {
-                    const sourceNode = nodes.find(n => n.userData.key === edge.source);
-                    const targetNode = nodes.find(n => n.userData.key === edge.target);
+                    const sourceNode = nodes.find(n => n.userData.key === edge.source && n.userData.attributes.description);
+                    const targetNode = nodes.find(n => n.userData.key === edge.target && n.userData.attributes.description);
                     
                     if (sourceNode && targetNode) {
                         // Create line geometry
@@ -743,6 +833,13 @@
                         
                         edges.push(line);
                         scene.add(line);
+
+                        // Create particle system for crypto_traffic edges
+                        if (edge.attributes.type === 'crypto_traffic') {
+                            const particles = tokenSystem.createParticleSystem(sourceNode, targetNode);
+                            particleSystems.push(particles);
+                            scene.add(particles);
+                        }
                     }
                 });
 
@@ -1270,24 +1367,24 @@
         }
 
         function updateEdgePositions() {
-            edges.forEach(edge => {
-                const sourceNode = nodes.find(n => n.userData.key === edge.userData.source);
-                const targetNode = nodes.find(n => n.userData.key === edge.userData.target);
+            edges.forEach((edge, index) => {
+                const sourceNode = nodes.find(node => node.userData.key === edge.userData.source);
+                const targetNode = nodes.find(node => node.userData.key === edge.userData.target);
                 
                 if (sourceNode && targetNode) {
-                    const positions = new Float32Array([
-                        sourceNode.position.x, sourceNode.position.y, sourceNode.position.z,
-                        targetNode.position.x, targetNode.position.y, targetNode.position.z
-                    ]);
+                    const positions = [];
+                    positions.push(sourceNode.position.x, sourceNode.position.y, sourceNode.position.z);
+                    positions.push(targetNode.position.x, targetNode.position.y, targetNode.position.z);
                     
-                    // Completely replace the position attribute
-                    edge.geometry.setAttribute('position', 
-                        new THREE.BufferAttribute(positions, 3)
-                    );
-                    
-                    // Ensure Three.js knows to update the geometry
-                    edge.geometry.computeBoundingSphere();
+                    edge.geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
                     edge.geometry.attributes.position.needsUpdate = true;
+                    
+                    // Update corresponding particle system if it exists
+                    const particleSystem = particleSystems[index];
+                    if (particleSystem && edge.userData.type === 'crypto_traffic') {
+                        particleSystem.userData.sourceNode = sourceNode;
+                        particleSystem.userData.targetNode = targetNode;
+                    }
                 }
             });
         }
@@ -1657,7 +1754,7 @@
             update();
         }
 
-        function addNextEventButton(currentNode, panel) {
+        function addNextEventButton(node, panel) {
             // Remove any existing button containers first
             const existingButtons = panel.querySelectorAll('.next-event-button-container');
             existingButtons.forEach(button => button.remove());
@@ -1669,7 +1766,7 @@
             buttonContainer.style.marginTop = '15px';
 
             // Get current timestamp
-            const currentTime = new Date(currentNode.userData.attributes.timestamp).getTime();
+            const currentTime = new Date(node.userData.attributes.timestamp).getTime();
             
             // Find the next chronological node
             const nextNode = nodes
@@ -1735,7 +1832,7 @@
             panel.appendChild(buttonContainer);
 
             // Debug logging
-            console.log('Current node:', currentNode.userData.attributes.name);
+            console.log('Current node:', node.userData.attributes.name);
             console.log('Next node:', nextNode ? nextNode.userData.attributes.name : 'None');
             console.log('Button container added:', buttonContainer);
         }

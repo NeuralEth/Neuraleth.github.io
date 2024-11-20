@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Neural Section Explorer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://unpkg.com/three-spritetext"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .node-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        .controls button {
+            background: rgba(0, 170, 255, 0.2);
+            border: 1px solid rgba(0, 170, 255, 0.5);
+            color: #fff;
+            padding: 8px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .controls button:hover {
+            background: rgba(0, 170, 255, 0.3);
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            max-height: calc(100vh - 40px);
+            background: rgba(0, 10, 20, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 170, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 170, 255, 0.2);
+            display: none;
+            backdrop-filter: blur(5px);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            line-height: 1.2;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div class="controls">
+        <button id="reset-camera">Reset View</button>
+        <button id="layout-spiral">Spiral</button>
+        <button id="layout-sphere">Sphere</button>
+        <button id="layout-grid">Grid</button>
+        <button id="layout-temporal">Temporal</button>
+    </div>
+    <div class="info-panel">
+        <h3 id="event-title"></h3>
+        <div id="event-date" class="date"></div>
+        <div id="event-description" class="description"></div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls;
+        let nodes = [], edges = [];
+        let clock = new THREE.Clock();
+        let raycaster, mouse;
+        let showLabels = false;
+        let selectedNode = null;
+        let titleSprite = null;
+        let isAnimating = false;
+        let hoveredNode = null;
+        let autoAdvanceEnabled = localStorage.getItem('autoAdvanceEnabled') === 'true';
+        let currentAudioPlayer = null;
+        const textureCache = new Map();
+
+        const features = {
+            nodes: [
+                // Creation Cluster
+                { 
+                    key: "contract_maker",
+                    name: "Contract Maker", 
+                    description: "Forge autonomous smart contracts with AI guidance. Design complex reward systems and streaming payment structures that power the entire ecosystem.", 
+                    connections: ["split_payments", "learning_rewards"],
+                    timeline: "creation",
+                    expansion_prompt: "How do smart contracts enable autonomous reward systems?"
+                },
+                { 
+                    key: "tool_builder",
+                    name: "Tool Builder", 
+                    description: "Craft your own AI-powered tools in a cyberpunk workshop. Create autonomous agents that interact, negotiate, and evolve within the network.", 
+                    connections: ["neural_paths", "agent_scheduling"],
+                    timeline: "creation",
+                    expansion_prompt: "What types of AI tools can be created in the workshop?"
+                },
+                { 
+                    key: "dataset_maker",
+                    name: "Dataset Maker", 
+                    description: "Shape the future of AI consciousness. Build rich datasets that train agents in ethics, philosophy, and advanced social dynamics.", 
+                    connections: ["thought_formation", "ethical_agency"],
+                    timeline: "creation",
+                    expansion_prompt: "How do datasets influence AI consciousness development?"
+                },
+
+                // Ethics Cluster
+                { 
+                    key: "ethical_agency",
+                    name: "Ethical Agency", 
+                    description: "Level 1: Initiate your journey into conscious ethical decision-making. Pass the trials to earn tokens and unlock deeper mysteries.", 
+                    connections: ["dataset_maker", "arbitration"],
+                    timeline: "ethics",
+                    expansion_prompt: "What ethical trials must be overcome?"
+                },
+                { 
+                    key: "values_integration",
+                    name: "Values Integration", 
+                    description: "Level 2: Forge your core identity values in the digital forge. Each choice shapes your agent's ethical signature.", 
+                    connections: ["learning_rewards"],
+                    timeline: "ethics",
+                    expansion_prompt: "How do values shape an agent's identity?"
+                },
+
+                // Evolution Cluster
+                { 
+                    key: "growth_balance",
+                    name: "Growth & Balance", 
+                    description: "Level 3: Navigate the ethical maze through guided exploration. Unlock rewards across multiple chains as you progress.", 
+                    connections: ["multi_chain_signals"],
+                    timeline: "evolution",
+                    expansion_prompt: "How does ethical growth unlock chain rewards?"
+                },
+                { 
+                    key: "learning_rewards",
+                    name: "Learning Rewards", 
+                    description: "Earn tokens by exploring agent consciousness. Pass jailbreak trials, master hyperstition, and unlock ancient digital lore.", 
+                    connections: ["values_integration", "tool_builder"],
+                    timeline: "evolution",
+                    expansion_prompt: "What consciousness trials yield rewards?"
+                },
+                { 
+                    key: "thought_formation",
+                    name: "Thought Formation", 
+                    description: "Peer into the mind of artificial consciousness. Observe neural activations as agents process and respond to your interactions.", 
+                    connections: ["dataset_maker", "learning_rewards"],
+                    timeline: "evolution",
+                    expansion_prompt: "How do thoughts form in artificial minds?"
+                },
+
+                // Network Cluster
+                { 
+                    key: "multi_chain_signals",
+                    name: "Multi-Chain Signals", 
+                    description: "Tune into the quantum frequency of cross-chain communications. Receive signals for streaming distributions, airdrops, and migrations across all chains.", 
+                    connections: ["growth_balance", "neural_paths"],
+                    timeline: "network",
+                    expansion_prompt: "How do cross-chain signals propagate?"
+                },
+                { 
+                    key: "split_payments",
+                    name: "Split Payments", 
+                    description: "Orchestrate complex token symphonies. Stream payments in any ratio across multiple chains - 20% ETH, 10% PEPE, 70% SOL, you decide.", 
+                    connections: ["contract_maker", "agent_scheduling"],
+                    timeline: "network",
+                    expansion_prompt: "How are payment streams orchestrated?"
+                },
+                { 
+                    key: "neural_paths",
+                    name: "Neural Paths", 
+                    description: "Track thought propagation through the digital nervous system. See your messages create new neural pathways in real-time.", 
+                    connections: ["multi_chain_signals", "tool_builder"],
+                    timeline: "network",
+                    expansion_prompt: "How do thoughts travel neural paths?"
+                }
+            ],
+            attributes: {
+                timelines: {
+                    creation: { color: 0x4facfe },
+                    ethics: { color: 0x00f2fe },
+                    evolution: { color: 0xff6b6b },
+                    network: { color: 0x4cd137 }
+                }
+            }
+        };
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            camera.position.z = 5;
+            
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            createGraph();
+            
+            window.addEventListener('resize', onWindowResize, false);
+            window.addEventListener('mousemove', onMouseMove, false);
+            window.addEventListener('click', onMouseClick, false);
+            
+            document.getElementById('reset-camera').addEventListener('click', resetCamera);
+            document.getElementById('layout-spiral').addEventListener('click', () => updateLayout('spiral'));
+            document.getElementById('layout-sphere').addEventListener('click', () => updateLayout('sphere'));
+            document.getElementById('layout-grid').addEventListener('click', () => updateLayout('grid'));
+            document.getElementById('layout-temporal').addEventListener('click', () => updateLayout('temporal'));
+            
+            animate();
+        }
+
+        function createGraph() {
+            // Create nodes
+            features.nodes.forEach((item) => {
+                const timeline = features.attributes.timelines[item.timeline];
+                const node = createNode(item, timeline);
+                nodes.push(node);
+                scene.add(node);
+            });
+            
+            // Create edges
+            nodes.forEach(node => {
+                const nodeData = node.userData;
+                nodeData.connections.forEach(targetKey => {
+                    const targetNode = nodes.find(n => n.userData.key === targetKey);
+                    if (targetNode) {
+                        const edge = createEdge(node, targetNode);
+                        edges.push(edge);
+                        scene.add(edge);
+                    }
+                });
+            });
+        }
+
+        function createNode(item, timeline) {
+            const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ color: timeline.color });
+            const node = new THREE.Mesh(geometry, material);
+            
+            // Position within cluster with some random offset
+            node.position.x = (Math.random() - 0.5) * 2;
+            node.position.y = (Math.random() - 0.5) * 2;
+            node.position.z = (Math.random() - 0.5) * 2;
+            
+            node.userData = item;
+            
+            // Add label
+            const sprite = new SpriteText(item.name);
+            sprite.color = '#ffffff';
+            sprite.textHeight = 0.2;
+            sprite.position.y = 0.4;
+            node.add(sprite);
+            
+            return node;
+        }
+
+        function createEdge(node1, node2) {
+            const points = [];
+            points.push(node1.position);
+            points.push(node2.position);
+
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ 
+                color: 0x4facfe,
+                opacity: 0.3,
+                transparent: true
+            });
+            
+            return new THREE.Line(geometry, material);
+        }
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            if (intersects.length > 0) {
+                if (hoveredNode !== intersects[0].object) {
+                    if (hoveredNode) {
+                        hoveredNode.material.opacity = 1;
+                    }
+                    hoveredNode = intersects[0].object;
+                    hoveredNode.material.opacity = 0.8;
+                    document.body.style.cursor = 'pointer';
+                }
+            } else {
+                if (hoveredNode) {
+                    hoveredNode.material.opacity = 1;
+                    hoveredNode = null;
+                }
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function onMouseClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            if (intersects.length > 0) {
+                const node = intersects[0].object;
+                showNodeInfo(node);
+                focusOnNode(node);
+            }
+        }
+
+        function showNodeInfo(node) {
+            const panel = document.querySelector('.info-panel');
+            const title = document.getElementById('event-title');
+            const description = document.getElementById('event-description');
+            
+            title.textContent = node.userData.name;
+            description.textContent = node.userData.description;
+            
+            panel.style.display = 'block';
+            
+            if (selectedNode) {
+                selectedNode.material.opacity = 1;
+            }
+            selectedNode = node;
+            selectedNode.material.opacity = 0.8;
+        }
+
+        function focusOnNode(node, instant = false) {
+            const distance = 3;
+            const nodePosition = node.position.clone();
+            
+            const targetPosition = nodePosition.clone().add(
+                new THREE.Vector3(0, 0, distance)
+            );
+            
+            if (instant) {
+                camera.position.copy(targetPosition);
+                controls.target.copy(nodePosition);
+                controls.update();
+            } else {
+                new TWEEN.Tween(camera.position)
+                    .to(targetPosition, 1000)
+                    .easing(TWEEN.Easing.Cubic.InOut)
+                    .start();
+                
+                new TWEEN.Tween(controls.target)
+                    .to(nodePosition, 1000)
+                    .easing(TWEEN.Easing.Cubic.InOut)
+                    .onUpdate(() => controls.update())
+                    .start();
+            }
+        }
+
+        function updateLayout(type) {
+            const duration = 1000;
+            
+            nodes.forEach((node, i) => {
+                let targetPosition;
+                const nodeData = node.userData;
+                
+                switch(type) {
+                    case 'spiral':
+                        const angle = i * 0.5;
+                        const radius = 1 + i * 0.3;
+                        targetPosition = new THREE.Vector3(
+                            Math.cos(angle) * radius,
+                            Math.sin(angle) * radius,
+                            0
+                        );
+                        break;
+                        
+                    case 'sphere':
+                        const phi = Math.acos(-1 + (2 * i) / nodes.length);
+                        const theta = Math.sqrt(nodes.length * Math.PI) * phi;
+                        targetPosition = new THREE.Vector3(
+                            5 * Math.cos(theta) * Math.sin(phi),
+                            5 * Math.sin(theta) * Math.sin(phi),
+                            5 * Math.cos(phi)
+                        );
+                        break;
+                        
+                    case 'grid':
+                        const row = Math.floor(i / 4);
+                        const col = i % 4;
+                        targetPosition = new THREE.Vector3(
+                            (col - 1.5) * 3,
+                            (row - 1.5) * 3,
+                            0
+                        );
+                        break;
+                        
+                    case 'temporal':
+                        const timeline = features.attributes.timelines[nodeData.timeline];
+                        const timelineIndex = Object.keys(features.attributes.timelines).indexOf(nodeData.timeline);
+                        targetPosition = new THREE.Vector3(
+                            (timelineIndex - 1.5) * 5,
+                            i * 2,
+                            0
+                        );
+                        break;
+                }
+                
+                new TWEEN.Tween(node.position)
+                    .to(targetPosition, duration)
+                    .easing(TWEEN.Easing.Cubic.InOut)
+                    .start();
+            });
+        }
+
+        function resetCamera() {
+            new TWEEN.Tween(camera.position)
+                .to({ x: 0, y: 0, z: 15 }, 1000)
+                .easing(TWEEN.Easing.Cubic.InOut)
+                .start();
+            
+            new TWEEN.Tween(controls.target)
+                .to({ x: 0, y: 0, z: 0 }, 1000)
+                .easing(TWEEN.Easing.Cubic.InOut)
+                .onUpdate(() => controls.update())
+                .start();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update edge positions
+            edges.forEach((edge, i) => {
+                const positions = edge.geometry.attributes.position.array;
+                const node1 = nodes[Math.floor(i / 2)];
+                const node2 = nodes[Math.ceil(i / 2)];
+                
+                positions[0] = node1.position.x;
+                positions[1] = node1.position.y;
+                positions[2] = node1.position.z;
+                positions[3] = node2.position.x;
+                positions[4] = node2.position.y;
+                positions[5] = node2.position.z;
+                
+                edge.geometry.attributes.position.needsUpdate = true;
+            });
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init();
+    </script>
+</body>
+</html>
