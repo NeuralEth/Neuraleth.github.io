@@ -3,8 +3,8 @@ class BrainTokenAnimation {
     constructor() {
         this.tokens = ['💎', '🪙', '💰', '⚡', '🔮', '🎯'];
         this.particleCount = 30;
-        this.baseSpeed = 6; // Reduced from 12 to 6
-        this.speedVariation = 2; // Reduced from 4 to 2
+        this.baseSpeed = 0.1; // Extremely slow initial speed
+        this.speedVariation = 0.03; // Reduced speed variation
         this.pathCurvature = 0.15;
         this.glowIntensity = 0.9;
         this.baseScale = 0.3; // Increased from 0.15 to 0.3
@@ -67,14 +67,14 @@ class BrainTokenAnimation {
             });
             
             const sprite = new THREE.Sprite(material);
-            const scale = this.baseScale + Math.random() * 0.2; // Increased scale variation
-            sprite.scale.set(scale * 3, scale, scale); // Horizontal stretch for motion blur
+            const scale = this.baseScale + Math.random() * 0.2;
+            sprite.scale.set(scale * 3, scale, scale);
             
-            // Initialize particle properties
+            // Initialize particle properties with extremely slow speed
             sprite.userData = {
                 progress: Math.random(),
                 speed: this.baseSpeed + (Math.random() - 0.5) * this.speedVariation,
-                rotationSpeed: (Math.random() - 0.5) * 2.0,
+                rotationSpeed: (Math.random() - 0.5) * 0.5, // Slower rotation too
                 pulsePhase: Math.random() * Math.PI * 2,
                 controlPoint: controlPoint.clone()
             };

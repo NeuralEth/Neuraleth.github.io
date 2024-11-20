@@ -524,8 +524,8 @@
         <button id="layout-temporal">Temporal</button>
         <div class="speed-control">
             <label>Token Speed:</label>
-            <input type="range" id="token-speed" min="0" max="20" value="6" step="0.01">
-            <span id="speed-value" class="speed-value">6.00x</span>
+            <input type="range" id="token-speed" min="0" max="20" value="0.1" step="0.01">
+            <span id="speed-value" class="speed-value">0.10x</span>
         </div>
     </div>
     <div class="info-panel">
@@ -546,6 +546,40 @@
         let currentAudioPlayer = null;
         let tokenSystem = new BrainTokenAnimation();
         let clock = new THREE.Clock();
+
+        // Initialize token system with extremely slow speed
+        tokenSystem.baseSpeed = 0.1;
+        tokenSystem.speedVariation = 0.03;
+
+        // Add speed control with high precision
+        const speedSlider = document.getElementById('token-speed');
+        const speedValue = document.getElementById('speed-value');
+        
+        // Initialize with extremely slow speed
+        speedValue.textContent = Number(speedSlider.value).toFixed(2) + 'x';
+        
+        speedSlider.addEventListener('input', (e) => {
+            const speed = parseFloat(e.target.value);
+            // Update display with 2 decimal precision
+            speedValue.textContent = speed.toFixed(2) + 'x';
+            
+            tokenSystem.baseSpeed = speed;
+            tokenSystem.speedVariation = speed > 0 ? Math.min(speed / 3, 0.5) : 0; // Cap variation for low speeds
+            
+            // Update existing particle systems
+            particleSystems.forEach(system => {
+                system.children.forEach(particle => {
+                    // When speed is 0, all particles stop
+                    if (speed === 0) {
+                        particle.userData.speed = 0;
+                    } else {
+                        // More precise speed calculation with reduced variation at low speeds
+                        const variation = Math.min(speed / 3, 0.5);
+                        particle.userData.speed = speed + (Math.random() - 0.5) * variation;
+                    }
+                });
+            });
+        });
 
         // Add edge color definitions
         const EDGE_COLORS = {
@@ -715,6 +749,7 @@
 
             // Load and create visualization
             await createTimelineGraph();
+            updateLayout('sphere'); // Start in sphere mode
 
             // Event listeners
             window.addEventListener('resize', onWindowResize, false);
@@ -732,32 +767,6 @@
 
             createPerformanceMonitor();
 
-            // Add speed control
-            const speedSlider = document.getElementById('token-speed');
-            const speedValue = document.getElementById('speed-value');
-            
-            speedSlider.addEventListener('input', (e) => {
-                const speed = parseFloat(e.target.value);
-                // Update display with 2 decimal precision
-                speedValue.textContent = speed.toFixed(2) + 'x';
-                
-                tokenSystem.baseSpeed = speed;
-                tokenSystem.speedVariation = speed > 0 ? speed / 3 : 0;
-                
-                // Update existing particle systems
-                particleSystems.forEach(system => {
-                    system.children.forEach(particle => {
-                        // When speed is 0, all particles stop
-                        if (speed === 0) {
-                            particle.userData.speed = 0;
-                        } else {
-                            // More precise speed calculation
-                            particle.userData.speed = speed + (Math.random() - 0.5) * (speed / 3);
-                        }
-                    });
-                });
-            });
-
             // Initialize speed value display
             speedValue.textContent = speedSlider.value + 'x';
         }
@@ -773,7 +782,7 @@
                 const validNodes = data.nodes.filter(node => node.attributes.description);
                 
                 // Create nodes only for valid entries
-                validNodes.forEach((node, i) => {
+                validNodes.forEach((node, index) => {
                     const geometry = new THREE.SphereGeometry(0.5, 16, 16);
                     const material = new THREE.MeshPhongMaterial({
                         color: 0x00aaff,
@@ -783,12 +792,16 @@
                     
                     const mesh = new THREE.Mesh(geometry, material);
                     
-                    // Position nodes in a spiral
-                    const angle = i * 0.1;
-                    const radius = 30 + (i * 0.1);
-                    mesh.position.x = Math.cos(angle) * radius;
-                    mesh.position.y = Math.sin(angle) * radius;
-                    mesh.position.z = i * 0.2;
+                    // Calculate initial sphere layout position
+                    const phi = Math.acos(-1 + (2 * index) / validNodes.length);
+                    const theta = Math.sqrt(validNodes.length * Math.PI) * phi;
+                    const radius = 50;
+                    
+                    mesh.position.setFromSpherical(new THREE.Spherical(
+                        radius,
+                        phi,
+                        theta
+                    ));
                     
                     mesh.userData = node;
                     nodes.push(mesh);
