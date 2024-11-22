@@ -43,6 +43,12 @@
             width: 200px;
         }
 
+        @media screen and (max-width: 480px) {
+            .performance-monitor {
+                display: none;
+            }
+        }
+
         .stats-container {
             margin-top: 10px;
             font-size: 12px;
