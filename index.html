@@ -3,64 +3,1543 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Continuum stability 0.9%</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #1A202C;
-            color: #E2E8F0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        .container {
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
-        }
-
-        .video-container {
-            position: relative;
-            margin: 2rem 0;
-            border-radius: 16px;
-            background: #141821;
-            box-shadow: 
-                inset 0 8px 16px rgba(0, 0, 0, 0.5),
-                inset 0 -8px 16px rgba(255, 255, 255, 0.05),
-                0 0 0 4px #2D3748;
-            padding: 6px;
-        }
-
-        video {
-            max-width: 100%;
-            border-radius: 12px;
-            display: block;
-            opacity: 0.95;
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            color: #63B3ED;
-        }
-    </style>
+    <title>Glitch Cube</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Waking Up</h1>
-        <a href="brain.html">🧠 Explorer v0.5</a>
-        <div class="video-container">
-            <video controls autoplay muted>
-                <source src="./hustleandflowstate-wake-up.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-        <pre>HHoXk7WursT9DLBBhHzBWBbuQkfvvoNyHKpJi61mpump</pre>
+    <div id="scanline"></div>
+    <div id="countdown-container">
+        <div id="countdown" class="encoded" data-content="00:00:00">00:00:00</div>
+        <div class="coming-soon">Coming Online Soon</div>
     </div>
+    <button id="cryptoButton" class="crypto-button">Enter the Cryptosphere</button>    
+    <div id="chat-interface">
+        <div id="chat-messages">
+            <div class="diagnostic-overlay">
+                <div class="code-column" style="left: 2%">
+                    <div class="code-line" style="animation-delay: -1s;">01001110 01000101 01010101 01010010 01000001 01001100</div>
+                    <div class="code-line" style="animation-delay: -3s;">NEURAL_LINK_ACTIVE = true;</div>
+                    <div class="code-line" style="animation-delay: -5s;">0xF3A2 0xB719 0xC4D8 0xE5F6</div>
+                    <div class="code-line" style="animation-delay: -7s;">{init_quantum_state();}</div>
+                    <div class="code-line" style="animation-delay: -9s;">for(;;) { scan_neural_paths(); }</div>
+                    <div class="code-line" style="animation-delay: -11s;">0x1A2B 0x3C4D 0x5E6F 0x7890</div>
+                </div>
+                
+                <div class="code-column" style="left: 25%">
+                    <div class="code-line" style="animation-delay: -2s;">while(1) { process_neural_data(); }</div>
+                    <div class="code-line" style="animation-delay: -4s;">0101 1100 0011 1010 0101</div>
+                    <div class="code-line" style="animation-delay: -6s;">quantum.encrypt(neural_path);</div>
+                    <div class="code-line" style="animation-delay: -8s;">0xA2B3 0xC4D5 0xE6F7 0x8901</div>
+                    <div class="code-line" style="animation-delay: -10s;">void quantum_entangle();</div>
+                    <div class="code-line" style="animation-delay: -12s;">01010111 01001111 01010010</div>
+                </div>
+
+                <div class="code-column" style="left: 48%">
+                    <div class="code-line" style="animation-delay: -1.5s;">class NeuralInterface {</div>
+                    <div class="code-line" style="animation-delay: -3.5s;">  void sync_consciousness();</div>
+                    <div class="code-line" style="animation-delay: -5.5s;">  bool verify_quantum();</div>
+                    <div class="code-line" style="animation-delay: -7.5s;">}</div>
+                    <div class="code-line" style="animation-delay: -9.5s;">struct QuantumState {</div>
+                    <div class="code-line" style="animation-delay: -11.5s;">  uint32_t entropy;</div>
+                </div>
+
+                <div class="code-column" style="left: 71%">
+                    <div class="code-line" style="animation-delay: -2.5s;">0xFFAA 0xBB33 0xCC55 0xDD77</div>
+                    <div class="code-line" style="animation-delay: -4.5s;">neural_path.optimize();</div>
+                    <div class="code-line" style="animation-delay: -6.5s;">01110010 01100101 01100001</div>
+                    <div class="code-line" style="animation-delay: -8.5s;">quantum_state.verify();</div>
+                    <div class="code-line" style="animation-delay: -10.5s;">0xDEAD 0xBEEF 0xCAFE 0xBABE</div>
+                    <div class="code-line" style="animation-delay: -12.5s;">sync_quantum_state();</div>
+                </div>
+
+                <div class="code-column" style="left: 94%">
+                    <div class="code-line" style="animation-delay: -1.8s;">function process_thought() {</div>
+                    <div class="code-line" style="animation-delay: -3.8s;">  return consciousness;</div>
+                    <div class="code-line" style="animation-delay: -5.8s;">}</div>
+                    <div class="code-line" style="animation-delay: -7.8s;">0xEEBB 0xAADD 0xFF11 0x2233</div>
+                    <div class="code-line" style="animation-delay: -9.8s;">class QuantumCore {</div>
+                    <div class="code-line" style="animation-delay: -11.8s;">  void initialize();</div>
+                </div>
+            </div>
+        </div>
+        <div id="chat-input-container">
+            <textarea id="chat-input" placeholder="Diagnostics mode..." rows="1" disabled></textarea>
+            <button id="send-button">↑</button>
+        </div>
+    </div>
+    <div id="controls">
+        <div class="audio-player-container">
+            <audio id="audioPlayer" controls>
+                <source src="testament2.mp3" type="audio/mpeg">
+            </audio>
+        </div>
+        <select id="voiceSelector">
+            <option value="testament2.mp3">Voice 1</option>
+            <option value="testament.mp3">Voice 2</option>
+        </select>
+        <select id="effectSelector">
+            <option value="glitchCube">Glitch Cube</option>
+            <option value="crystalSphere">Crystal Sphere</option>
+            <option value="lynchpin">Lynchpin</option>
+            <option value="spectrogram">Spectrogram</option>
+            <option value="magneticFlux">Magnetic Flux</option>
+        </select>
+        <a href="https://twitter.com/neuralethai" target="_blank" id="twitterButton">
+            <svg viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+        </a>
+        <a href="#" id="brainButton" style="color: white; text-decoration: none; margin-left: 10px;">Neural Timeline</a>
+        <button id="micButton" style="display: none;" >🎤</button>
+    </div>
+    <audio id="cryptoAudio" src="crypto1.mp3" loop></audio>
+    <script>
+        // Perlin noise implementation
+        const noise = {
+            grad3: new Float32Array([1,1,0,-1,1,0,1,-1,0,-1,-1,0,1,0,1,-1,0,1,1,0,-1,-1,0,-1,0,1,1,0,-1,1,0,1,-1,0,-1,-1]),
+            p: new Uint8Array([151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180]),
+            perm: new Uint8Array(512),
+            gradP: new Float32Array(512 * 3),
+            init() {
+                for(let i = 0; i < 512; i++) {
+                    const pi = this.p[i & 255];
+                    this.perm[i] = pi;
+                    const gi = (pi % 12) * 3;
+                    this.gradP[i * 3] = this.grad3[gi];
+                    this.gradP[i * 3 + 1] = this.grad3[gi + 1];
+                    this.gradP[i * 3 + 2] = this.grad3[gi + 2];
+                }
+            },
+            noise3D(x, y, z) {
+                const X = Math.floor(x), Y = Math.floor(y), Z = Math.floor(z);
+                x = x - X; y = y - Y; z = z - Z;
+                const X1 = X & 255, Y1 = Y & 255, Z1 = Z & 255;
+                
+                const gi000 = (this.perm[X1 + this.perm[Y1 + this.perm[Z1]]] % 12) * 3;
+                const gi001 = (this.perm[X1 + this.perm[Y1 + this.perm[Z1 + 1]]] % 12) * 3;
+                const gi010 = (this.perm[X1 + this.perm[Y1 + 1 + this.perm[Z1]]] % 12) * 3;
+                const gi011 = (this.perm[X1 + this.perm[Y1 + 1 + this.perm[Z1 + 1]]] % 12) * 3;
+                const gi100 = (this.perm[X1 + 1 + this.perm[Y1 + this.perm[Z1]]] % 12) * 3;
+                const gi101 = (this.perm[X1 + 1 + this.perm[Y1 + this.perm[Z1 + 1]]] % 12) * 3;
+                const gi110 = (this.perm[X1 + 1 + this.perm[Y1 + 1 + this.perm[Z1]]] % 12) * 3;
+                const gi111 = (this.perm[X1 + 1 + this.perm[Y1 + 1 + this.perm[Z1 + 1]]] % 12) * 3;
+                
+                const n000 = this.dot(this.gradP, gi000, x, y, z);
+                const n001 = this.dot(this.gradP, gi001, x, y, z - 1);
+                const n010 = this.dot(this.gradP, gi010, x, y - 1, z);
+                const n011 = this.dot(this.gradP, gi011, x, y - 1, z - 1);
+                const n100 = this.dot(this.gradP, gi100, x - 1, y, z);
+                const n101 = this.dot(this.gradP, gi101, x - 1, y, z - 1);
+                const n110 = this.dot(this.gradP, gi110, x - 1, y - 1, z);
+                const n111 = this.dot(this.gradP, gi111, x - 1, y - 1, z - 1);
+                
+                const u = this.fade(x), v = this.fade(y), w = this.fade(z);
+                
+                const nx00 = this.mix(n000, n100, u);
+                const nx01 = this.mix(n001, n101, u);
+                const nx10 = this.mix(n010, n110, u);
+                const nx11 = this.mix(n011, n111, u);
+                
+                const nxy0 = this.mix(nx00, nx10, v);
+                const nxy1 = this.mix(nx01, nx11, v);
+                
+                return this.mix(nxy0, nxy1, w);
+            },
+            dot(g, gi, x, y, z) {
+                return g[gi] * x + g[gi + 1] * y + g[gi + 2] * z;
+            },
+            mix(a, b, t) {
+                return (1 - t) * a + t * b;
+            },
+            fade(t) {
+                return t * t * t * (t * (t * 6 - 15) + 10);
+            }
+        };
+        noise.init();
+
+        // Three.js setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            alpha: true 
+        });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        document.body.appendChild(renderer.domElement);
+
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        // Resource management
+        const textureCache = new Map();
+        const disposableObjects = new Set();
+
+        function cleanupTexture(texture) {
+            if (texture && texture.dispose) {
+                texture.dispose();
+            }
+        }
+
+        function disposeObject(obj) {
+            if (obj.geometry) {
+                obj.geometry.dispose();
+            }
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    obj.material.forEach(material => {
+                        if (material.map) material.map.dispose();
+                        material.dispose();
+                    });
+                } else {
+                    if (obj.material.map) obj.material.map.dispose();
+                    obj.material.dispose();
+                }
+            }
+            if (obj.parent) {
+                obj.parent.remove(obj);
+            }
+            disposableObjects.delete(obj);
+        }
+
+        function cleanupScene() {
+            // Cleanup all disposable objects
+            disposableObjects.forEach(obj => disposeObject(obj));
+            disposableObjects.clear();
+
+            // Cleanup texture cache
+            textureCache.forEach(texture => cleanupTexture(texture));
+            textureCache.clear();
+
+            // Force garbage collection in renderer
+            renderer.renderLists.dispose();
+        }
+
+        // Audio setup
+        let audioContext;
+        let analyzer;
+        let dataArray;
+        let audioData = {
+            bassIntensity: 0,
+            midIntensity: 0,
+            trebleIntensity: 0,
+            intensity: 0
+        };
+        let isAudioInitialized = false;
+        let audioSource;
+        let micStream = null;
+        let isMicActive = false;
+
+        // Initialize audio context and analyzer
+        function initAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyzer = audioContext.createAnalyser();
+                analyzer.fftSize = 2048;
+                analyzer.smoothingTimeConstant = 0.8;
+                dataArray = new Uint8Array(analyzer.frequencyBinCount);
+            }
+            return audioContext;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initAudioContext();
+        });
+
+        // Setup audio file
+        const audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.addEventListener('play', () => {
+            if (!isAudioInitialized) {
+                audioSource = audioContext.createMediaElementSource(audioPlayer);
+                audioSource.connect(analyzer);
+                analyzer.connect(audioContext.destination);
+                isAudioInitialized = true;
+            }
+            audioContext.resume();
+        });
+
+        // Setup microphone
+        async function toggleMicrophone() {
+            const micButton = document.getElementById('micButton');
+            
+            if (!isMicActive) {
+                try {
+                    // Initialize audio context if not already done
+                    if (!audioContext) {
+                        initAudioContext();
+                    }
+                    await audioContext.resume();
+                    
+                    // Request microphone access
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    // Create a new source from the microphone stream
+                    const micSource = audioContext.createMediaStreamSource(micStream);
+                    
+                    // Connect microphone to analyzer
+                    micSource.connect(analyzer);
+                    
+                    // Update UI
+                    micButton.style.background = 'rgba(0, 255, 0, 0.3)';
+                    micButton.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.4)';
+                    isMicActive = true;
+                    
+                    // Stop any playing audio
+                    if (currentAudioElement) {
+                        currentAudioElement.pause();
+                    }
+                    currentAudioElement = null;
+                    
+                } catch (err) {
+                    console.error('Error accessing microphone:', err);
+                    alert('Could not access microphone. Please ensure you have granted microphone permissions.');
+                }
+            } else {
+                // Disconnect and clean up microphone
+                if (micStream) {
+                    micStream.getTracks().forEach(track => track.stop());
+                    micStream = null;
+                }
+                
+                // Reset analyzer connection
+                analyzer.disconnect();
+                
+                // Update UI
+                micButton.style.background = '';
+                micButton.style.boxShadow = '';
+                isMicActive = false;
+            }
+        }
+
+        document.getElementById('micButton').addEventListener('click', toggleMicrophone);
+
+        // Effects system
+        const visualEffects = {
+            glitchCube: {
+                name: "Glitch Cube",
+                init: () => {
+                    // Create cube geometry
+                    const geometry = new THREE.BoxGeometry();
+                    const material = new THREE.MeshBasicMaterial({ 
+                        color: 0x00ff00,
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    const wireframeMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x00ffff,
+                        wireframe: true,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    
+                    currentMesh = new THREE.Mesh(geometry, material);
+                    const wireframe = new THREE.Mesh(geometry, wireframeMaterial);
+                    currentMesh.add(wireframe);
+                    scene.add(currentMesh);
+                    
+                    return {
+                        mesh: currentMesh,
+                        materials: [material, wireframeMaterial]
+                    };
+                },
+                update: (time, audioData) => {
+                    const { intensity, bassIntensity, midIntensity, trebleIntensity } = audioData;
+                    
+                    // Rotation
+                    currentMesh.rotation.x += 0.02 * (1 + bassIntensity * 2);
+                    currentMesh.rotation.y += 0.02 * (1 + midIntensity * 2);
+                    currentMesh.rotation.z += 0.01 * (1 + trebleIntensity);
+
+                    // Scale
+                    const scale = 1 + intensity * 0.5;
+                    currentMesh.scale.set(scale, scale, scale);
+
+                    // Mouse interaction
+                    const mouseInfluence = 1 + intensity * 3;
+                    currentMesh.position.x += (mouseX * 2 - currentMesh.position.x) * 0.05 * mouseInfluence;
+                    currentMesh.position.y += (-mouseY * 2 - currentMesh.position.y) * 0.05 * mouseInfluence;
+
+                    // Glitch effect
+                    if (bassIntensity > 0.5 && time - lastGlitchTime > 200) {
+                        glitchIntensity = bassIntensity;
+                        lastGlitchTime = time;
+                        setTimeout(() => {
+                            glitchIntensity = 0;
+                        }, 100 + bassIntensity * 100);
+                    }
+                },
+                onBeat: () => {
+                    createTrail();
+                }
+            },
+            crystalSphere: {
+                name: "Crystal Sphere",
+                init() {
+                    const geometry = new THREE.IcosahedronGeometry(1, 2);
+                    const material = new THREE.MeshPhongMaterial({
+                        color: 0x00ff88,
+                        wireframe: false,
+                        transparent: true,
+                        opacity: 0.8,
+                        shininess: 100,
+                        specular: 0x88ffaa
+                    });
+                    
+                    const wireframeMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x00ff88,
+                        wireframe: true,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    
+                    const mesh = new THREE.Mesh(geometry, material);
+                    const wireframe = new THREE.Mesh(geometry, wireframeMaterial);
+                    mesh.add(wireframe);
+                    scene.add(mesh);
+                    
+                    // Store original vertices for animation
+                    const positions = geometry.attributes.position.array;
+                    const originalVertices = new Float32Array(positions.length);
+                    for (let i = 0; i < positions.length; i++) {
+                        originalVertices[i] = positions[i];
+                    }
+                    
+                    return {
+                        mesh,
+                        originalVertices,
+                        rotationSpeed: 0.005,
+                        pulsePhase: 0
+                    };
+                },
+                update(time, audioData) {
+                    if (!currentMesh) return;
+                    
+                    const positions = currentMesh.geometry.attributes.position.array;
+                    const originalVertices = currentEffect.originalVertices;
+                    
+                    // Update rotation based on audio
+                    currentMesh.rotation.x += audioData.midIntensity * 0.05;
+                    currentMesh.rotation.y += audioData.trebleIntensity * 0.05;
+                    
+                    // Vertex manipulation based on audio
+                    for (let i = 0; i < positions.length; i += 3) {
+                        const displacement = (audioData.bassIntensity * 0.5) * 
+                            Math.sin(time * 0.001 + positions[i] * 0.5);
+                        
+                        positions[i] = originalVertices[i] + displacement;
+                        positions[i + 1] = originalVertices[i + 1] + displacement;
+                        positions[i + 2] = originalVertices[i + 2] + displacement;
+                    }
+                    
+                    // Update geometry and color
+                    currentMesh.geometry.attributes.position.needsUpdate = true;
+                    currentMesh.material.color.setHSL(
+                        (time * 0.0001) % 1,
+                        0.5 + audioData.midIntensity * 0.5,
+                        0.5 + audioData.trebleIntensity * 0.5
+                    );
+                    
+                    // Pulse effect
+                    this.pulsePhase = (this.pulsePhase + audioData.intensity * 0.1) % (Math.PI * 2);
+                    const scale = 1 + Math.sin(this.pulsePhase) * 0.2 * audioData.bassIntensity;
+                    currentMesh.scale.set(scale, scale, scale);
+                },
+                onBeat() {
+                    if (!currentMesh || !currentMesh.geometry) return;
+                    
+                    // Crystal shatter effect on beat
+                    const positions = currentMesh.geometry.attributes.position.array;
+                    const originalVertices = currentEffect.originalVertices;
+                    
+                    for (let i = 0; i < positions.length; i += 3) {
+                        const burst = (Math.random() - 0.5) * 0.3;
+                        positions[i] = originalVertices[i] * (1 + burst);
+                        positions[i + 1] = originalVertices[i + 1] * (1 + burst);
+                        positions[i + 2] = originalVertices[i + 2] * (1 + burst);
+                    }
+                    currentMesh.geometry.attributes.position.needsUpdate = true;
+                    
+                    // Reset vertices after a short delay
+                    setTimeout(() => {
+                        if (!currentMesh || !currentMesh.geometry) return;
+                        for (let i = 0; i < positions.length; i++) {
+                            positions[i] = originalVertices[i];
+                        }
+                        currentMesh.geometry.attributes.position.needsUpdate = true;
+                    }, 150);
+                    
+                    // Create particle burst
+                    createParticleExplosion(currentMesh.position);
+                }
+            },
+            lynchpin: {
+                name: "Lynchpin",
+                init() {
+                    // Create a complex geometry based on Terrence Howard's concepts
+                    const group = new THREE.Group();
+                    
+                    // Create multiple tetrahedra in a "flower" pattern
+                    const radius = 1;
+                    const tetraGeometry = new THREE.TetrahedronGeometry(0.5);
+                    
+                    // Create the central tetrahedron
+                    const centerMaterial = new THREE.MeshPhongMaterial({
+                        color: 0xff3366,
+                        transparent: true,
+                        opacity: 0.8,
+                        shininess: 90,
+                        specular: 0xff88aa
+                    });
+                    
+                    const centerMesh = new THREE.Mesh(tetraGeometry, centerMaterial);
+                    group.add(centerMesh);
+                    
+                    // Create orbital tetrahedra
+                    const numOrbitals = 7; // "Lucky number 7"
+                    const orbitalPositions = [];
+                    const orbitalVelocities = [];
+                    
+                    for (let i = 0; i < numOrbitals; i++) {
+                        const angle = (i / numOrbitals) * Math.PI * 2;
+                        const orbitMaterial = new THREE.MeshPhongMaterial({
+                            color: new THREE.Color().setHSL(i / numOrbitals, 0.8, 0.5),
+                            transparent: true,
+                            opacity: 0.6,
+                            shininess: 80,
+                            specular: 0xffffff
+                        });
+                        
+                        const mesh = new THREE.Mesh(tetraGeometry, orbitMaterial);
+                        
+                        // Position around circle
+                        mesh.position.x = Math.cos(angle) * radius;
+                        mesh.position.y = Math.sin(angle) * radius;
+                        mesh.rotation.y = -angle;
+                        mesh.rotation.x = Math.PI / 4;
+                        group.add(mesh);
+                        
+                        // Initialize position and velocity vectors
+                        orbitalPositions.push(new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z));
+                        orbitalVelocities.push(new THREE.Vector3(0, 0, 0));
+                        
+                        // Add connecting lines
+                        const lineGeometry = new THREE.BufferGeometry();
+                        const points = [
+                            new THREE.Vector3(0, 0, 0),
+                            new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z)
+                        ];
+                        lineGeometry.setFromPoints(points);
+                        
+                        const lineMaterial = new THREE.LineBasicMaterial({
+                            color: 0xffaa88,
+                            transparent: true,
+                            opacity: 0.3
+                        });
+                        
+                        const line = new THREE.Line(lineGeometry, lineMaterial);
+                        group.add(line);
+                    }
+                    
+                    scene.add(group);
+                    
+                    return {
+                        mesh: group,
+                        tetrahedra: group.children.filter(child => child instanceof THREE.Mesh),
+                        lines: group.children.filter(child => child instanceof THREE.Line),
+                        orbitalPositions,
+                        orbitalVelocities,
+                        rotationSpeed: 0.02,
+                        magneticForce: 0.05,
+                        damping: 0.98
+                    };
+                },
+                update(time, audioData) {
+                    if (!currentMesh) return;
+                    
+                    const tetrahedra = currentEffect.tetrahedra;
+                    const lines = currentEffect.lines;
+                    const positions = currentEffect.orbitalPositions;
+                    const velocities = currentEffect.orbitalVelocities;
+                    
+                    // Update magnetic forces
+                    const magneticStrength = this.magneticForce * (1 + audioData.bassIntensity * 2);
+                    const repelStrength = this.magneticForce * (1 + audioData.trebleIntensity * 2);
+                    
+                    // Update orbital tetrahedra
+                    for (let i = 1; i < tetrahedra.length; i++) {
+                        const tetra = tetrahedra[i];
+                        const pos = positions[i - 1];
+                        const vel = velocities[i - 1];
+                        
+                        // Calculate forces between tetrahedra
+                        const force = new THREE.Vector3();
+                        
+                        // Attract to center (magnetic pull)
+                        force.copy(pos).multiplyScalar(-magneticStrength * audioData.bassIntensity);
+                        
+                        // Repel from other tetrahedra
+                        for (let j = 1; j < tetrahedra.length; j++) {
+                            if (i !== j) {
+                                const otherPos = positions[j - 1];
+                                const diff = new THREE.Vector3().subVectors(pos, otherPos);
+                                const dist = diff.length();
+                                if (dist < 2) {
+                                    diff.normalize().multiplyScalar(repelStrength / (dist * dist));
+                                    force.add(diff);
+                                }
+                            }
+                        }
+                        
+                        // Apply forces
+                        vel.add(force);
+                        vel.multiplyScalar(this.damping);
+                        pos.add(vel);
+                        
+                        // Constrain distance from center
+                        const dist = pos.length();
+                        if (dist > 2) {
+                            pos.normalize().multiplyScalar(2);
+                        }
+                        
+                        // Update tetrahedron position and rotation
+                        tetra.position.copy(pos);
+                        tetra.rotation.x += audioData.trebleIntensity * 0.1;
+                        tetra.rotation.y += audioData.midIntensity * 0.1;
+                        
+                        // Update connecting line
+                        if (lines[i-1]) {
+                            const lineGeometry = lines[i-1].geometry;
+                            const linePositions = lineGeometry.attributes.position.array;
+                            linePositions[3] = pos.x;
+                            linePositions[4] = pos.y;
+                            linePositions[5] = pos.z;
+                            lineGeometry.attributes.position.needsUpdate = true;
+                        }
+                        
+                        // Update colors based on velocity
+                        const speed = vel.length();
+                        tetra.material.color.setHSL(
+                            (time * 0.0001 + i * 0.1) % 1,
+                            0.5 + speed * 2,
+                            0.3 + audioData.trebleIntensity * 0.7
+                        );
+                    }
+                    
+                    // Update center tetrahedron
+                    const centerTetra = tetrahedra[0];
+                    const pulseScale = 1 + audioData.bassIntensity * 0.3;
+                    centerTetra.scale.set(pulseScale, pulseScale, pulseScale);
+                    centerTetra.rotation.y += audioData.midIntensity * 0.1;
+                },
+                onBeat() {
+                    if (!currentMesh || !currentEffect.tetrahedra) return;
+                    
+                    const velocities = currentEffect.orbitalVelocities;
+                    
+                    // Add explosive force on beat
+                    velocities.forEach(vel => {
+                        vel.x += (Math.random() - 0.5) * 0.2;
+                        vel.y += (Math.random() - 0.5) * 0.2;
+                        vel.z += (Math.random() - 0.5) * 0.2;
+                    });
+                    
+                    createParticleExplosion(currentMesh.position);
+                }
+            },
+            spectrogram: {
+                name: "Spectrogram",
+                init() {
+                    const group = new THREE.Group();
+                    
+                    // Create circular frequency bars
+                    const numBars = 64;
+                    const radius = 2;
+                    const bars = [];
+                    const originalHeights = [];
+                    
+                    for (let i = 0; i < numBars; i++) {
+                        const angle = (i / numBars) * Math.PI * 2;
+                        const barGeometry = new THREE.BoxGeometry(0.1, 0.1, 1);
+                        barGeometry.translate(0, 0, 0.5); // Move pivot to bottom
+                        
+                        const barMaterial = new THREE.MeshPhongMaterial({
+                            color: new THREE.Color().setHSL(i / numBars, 0.8, 0.5),
+                            transparent: true,
+                            opacity: 0.8,
+                            shininess: 80
+                        });
+                        
+                        const bar = new THREE.Mesh(barGeometry, barMaterial);
+                        
+                        // Position around circle
+                        bar.position.x = Math.cos(angle) * radius;
+                        bar.position.y = Math.sin(angle) * radius;
+                        bar.rotation.z = angle;
+                        
+                        group.add(bar);
+                        bars.push(bar);
+                        originalHeights.push(1);
+                    }
+                    
+                    // Add center sphere
+                    const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+                    const sphereMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x00ffaa,
+                        transparent: true,
+                        opacity: 0.6,
+                        shininess: 90
+                    });
+                    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                    group.add(sphere);
+                    
+                    // Add outer ring
+                    const ringGeometry = new THREE.TorusGeometry(radius, 0.05, 16, 100);
+                    const ringMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x00ffff,
+                        transparent: true,
+                        opacity: 0.3,
+                        shininess: 90
+                    });
+                    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                    group.add(ring);
+                    
+                    scene.add(group);
+                    
+                    return {
+                        mesh: group,
+                        bars,
+                        sphere,
+                        ring,
+                        originalHeights,
+                        glitchOffset: new THREE.Vector3(),
+                        rotationSpeed: 0.01,
+                        timeOffset: 0,
+                        targetRotation: new THREE.Vector3(),
+                        currentRotation: new THREE.Vector3(),
+                        momentum: new THREE.Vector3()
+                    };
+                },
+                update(time, audioData) {
+                    if (!currentMesh) return;
+                    
+                    const bars = currentEffect.bars;
+                    const sphere = currentEffect.sphere;
+                    const ring = currentEffect.ring;
+                    
+                    // Calculate target rotation from mouse position
+                    const targetX = mouseY * Math.PI * 0.3;
+                    const targetY = -mouseX * Math.PI * 0.3;
+                    currentEffect.targetRotation.set(targetX, targetY, 0);
+                    
+                    // Add audio-driven rotation
+                    const audioRotationSpeed = 0.02;
+                    currentEffect.momentum.x += (audioData.midIntensity - 0.5) * audioRotationSpeed;
+                    currentEffect.momentum.y += (audioData.trebleIntensity - 0.5) * audioRotationSpeed;
+                    currentEffect.momentum.z += audioData.bassIntensity * audioRotationSpeed * 0.5;
+                    
+                    // Apply stronger damping
+                    currentEffect.momentum.multiplyScalar(0.9);
+                    currentEffect.currentRotation.add(currentEffect.momentum);
+                    
+                    // Slower interpolation
+                    const lerpFactor = 0.05;
+                    currentMesh.rotation.x += (currentEffect.targetRotation.x + currentEffect.currentRotation.x - currentMesh.rotation.x) * lerpFactor;
+                    currentMesh.rotation.y += (currentEffect.targetRotation.y + currentEffect.currentRotation.y - currentMesh.rotation.y) * lerpFactor;
+                    currentMesh.rotation.z += currentEffect.currentRotation.z * lerpFactor;
+                    
+                    // Update time offset for wave effect
+                    this.timeOffset += 0.05;
+                    
+                    // Apply frequency data to bars
+                    const frequencyData = analyzer.getByteFrequencyData(dataArray);
+                    bars.forEach((bar, i) => {
+                        const frequencyIndex = Math.floor(i * dataArray.length / bars.length);
+                        const value = dataArray[frequencyIndex] / 255.0;
+                        
+                        // Calculate height with wave modulation
+                        const waveOffset = Math.sin(this.timeOffset + i * 0.2) * 0.3;
+                        const targetHeight = 0.1 + value * 2 + waveOffset;
+                        
+                        // Smooth height transition
+                        bar.scale.z += (targetHeight - bar.scale.z) * 0.3;
+                        
+                        // Update color based on height and audio
+                        const hue = (i / bars.length + time * 0.0001) % 1;
+                        const saturation = 0.5 + value * 0.5;
+                        const lightness = 0.3 + value * 0.4;
+                        bar.material.color.setHSL(hue, saturation, lightness);
+                        
+                        // Add glitch offset
+                        if (Math.random() < 0.05 * audioData.trebleIntensity) {
+                            bar.position.x += (Math.random() - 0.5) * 0.1;
+                            bar.position.y += (Math.random() - 0.5) * 0.1;
+                            setTimeout(() => {
+                                if (bar) {
+                                    const angle = (i / bars.length) * Math.PI * 2;
+                                    bar.position.x = Math.cos(angle) * 2;
+                                    bar.position.y = Math.sin(angle) * 2;
+                                }
+                            }, 50);
+                        }
+                    });
+                    
+                    // Update center sphere with reduced rotation
+                    const pulseScale = 1 + audioData.bassIntensity * 0.5;
+                    sphere.scale.set(pulseScale, pulseScale, pulseScale);
+                    sphere.material.color.setHSL(time * 0.0001 % 1, 0.8, 0.5 + audioData.intensity * 0.5);
+                    sphere.rotation.y += audioData.midIntensity * 0.03;
+                    
+                    // Update ring
+                    ring.material.opacity = 0.3 + audioData.midIntensity * 0.5;
+                    ring.rotation.x = Math.sin(time * 0.001) * 0.2;
+                    ring.rotation.z = Math.cos(time * 0.001) * 0.2;
+                },
+                onBeat() {
+                    if (!currentMesh || !currentEffect.bars) return;
+                    
+                    // Glitch effect on beat
+                    currentEffect.bars.forEach(bar => {
+                        if (Math.random() < 0.3) {
+                            const glitchScale = 1 + Math.random() * 0.5;
+                            bar.scale.x *= glitchScale;
+                            bar.scale.y *= glitchScale;
+                            
+                            setTimeout(() => {
+                                if (bar) {
+                                    bar.scale.x = 1;
+                                    bar.scale.y = 1;
+                                }
+                            }, 100);
+                        }
+                    });
+                    
+                    createParticleExplosion(currentMesh.position);
+                }
+            },
+            magneticFlux: {
+                name: "Magnetic Flux",
+                init() {
+                    const group = new THREE.Group();
+                    
+                    // Create high-detail magnetic blob
+                    const blobGeometry = new THREE.IcosahedronGeometry(1, 5);
+                    const blobMaterial = new THREE.MeshPhongMaterial({
+                        color: 0x000000,
+                        specular: 0xaaaaaa,
+                        emissive: 0x001133,
+                        shininess: 100,
+                        transparent: true,
+                        opacity: 0.85
+                    });
+                    
+                    const blob = new THREE.Mesh(blobGeometry, blobMaterial);
+                    
+                    // Store original vertex positions
+                    const originalPositions = blob.geometry.attributes.position.array.slice();
+                    blob.userData = {
+                        angle: 0,
+                        radius: 1,
+                        speed: 0.02,
+                        pulseSpeed: 0.05,
+                        pulseOffset: 0,
+                        baseRadius: 1,
+                        originalPositions,
+                        time: 0,
+                        glitchTime: 0,
+                        glitchIntensity: 0
+                    };
+                    blob.userData.time = 0;
+                    blob.userData.glitchTime = 0;
+                    blob.userData.glitchIntensity = 0;
+                    
+                    // Add particle system for magnetic field visualization
+                    const particleCount = 1000;
+                    const particleGeometry = new THREE.BufferGeometry();
+                    const positions = new Float32Array(particleCount * 3);
+                    const colors = new Float32Array(particleCount * 3);
+                    
+                    for(let i = 0; i < particleCount; i++) {
+                        const radius = 2 + Math.random() * 2;
+                        const theta = Math.random() * Math.PI * 2;
+                        const phi = Math.random() * Math.PI * 2;
+                        
+                        positions[i * 3] = radius * Math.sin(theta) * Math.cos(phi);
+                        positions[i * 3 + 1] = radius * Math.sin(theta) * Math.sin(phi);
+                        positions[i * 3 + 2] = radius * Math.cos(theta);
+                        
+                        colors[i * 3] = 0.2;
+                        colors[i * 3 + 1] = 0.5;
+                        colors[i * 3 + 2] = 1.0;
+                    }
+                    
+                    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                    
+                    const particleMaterial = new THREE.PointsMaterial({
+                        size: 0.05,
+                        vertexColors: true,
+                        transparent: true,
+                        opacity: 0.6,
+                        blending: THREE.AdditiveBlending
+                    });
+                    
+                    const particles = new THREE.Points(particleGeometry, particleMaterial);
+                    particles.userData = {
+                        originalPositions: positions.slice(),
+                        time: 0
+                    };
+                    
+                    group.add(blob);
+                    group.add(particles);
+                    scene.add(group);
+                    
+                    return {
+                        mesh: group,
+                        blob,
+                        particles,
+                        timeOffset: 0
+                    };
+                },
+                update(time, audioData) {
+                    if (!currentMesh || !currentEffect.blob || !currentEffect.particles) return;
+                    
+                    const blob = currentEffect.blob;
+                    const particles = currentEffect.particles;
+                    
+                    // Update blob
+                    const positions = blob.geometry.attributes.position.array;
+                    const originalPositions = blob.userData.originalPositions;
+                    blob.userData.time += 0.016;
+                    
+                    // Update glitch state
+                    if (Math.random() < 0.05 * audioData.trebleIntensity) {
+                        blob.userData.glitchTime = time;
+                        blob.userData.glitchIntensity = 0.5 + Math.random() * 0.5;
+                    }
+                    const glitchFade = Math.max(0, 1 - (time - blob.userData.glitchTime) / 100);
+                    
+                    // Add mouse influence
+                    const mouseInfluence = new THREE.Vector3(
+                        (mouseX - 0.5) * 2,
+                        -(mouseY - 0.5) * 2,
+                        0
+                    ).multiplyScalar(0.5);
+                    
+                    // Calculate noise parameters
+                    const noiseScale = 2.0 + audioData.bassIntensity * 3.0;
+                    const timeScale = blob.userData.time * (0.5 + audioData.midIntensity);
+                    const displacement = (0.3 + audioData.intensity * 0.7) * (1 + glitchFade * blob.userData.glitchIntensity);
+                    
+                    // Update each vertex with glitch displacement
+                    for (let i = 0; i < positions.length; i += 3) {
+                        const x = originalPositions[i];
+                        const y = originalPositions[i + 1];
+                        const z = originalPositions[i + 2];
+                        
+                        // Calculate distance from mouse influence
+                        const vertexVector = new THREE.Vector3(x, y, z);
+                        const mouseDistance = vertexVector.distanceTo(mouseInfluence);
+                        const mouseEffect = Math.max(0, 1 - mouseDistance) * 0.5;
+                        
+                        // Layered noise for more complex deformation
+                        const noiseValue = (
+                            noise.noise3D(
+                                x * noiseScale + timeScale,
+                                y * noiseScale + timeScale,
+                                z * noiseScale + timeScale
+                            ) * 0.7 +
+                            noise.noise3D(
+                                x * noiseScale * 2 + timeScale * 1.5,
+                                y * noiseScale * 2,
+                                z * noiseScale * 2
+                            ) * 0.3
+                        );
+                        
+                        // Add glitch displacement
+                        const glitchOffset = glitchFade * (
+                            Math.sin(x * 50 + timeScale) * 0.2 +
+                            Math.cos(y * 40 + timeScale) * 0.2 +
+                            Math.sin(z * 30 + timeScale) * 0.2
+                        );
+                        
+                        // Combine all effects
+                        const totalDisplacement = displacement * (1 + mouseEffect);
+                        positions[i] = x + (x * noiseValue + glitchOffset) * totalDisplacement + mouseInfluence.x * mouseEffect;
+                        positions[i + 1] = y + (y * noiseValue + glitchOffset) * totalDisplacement + mouseInfluence.y * mouseEffect;
+                        positions[i + 2] = z + (z * noiseValue + glitchOffset) * totalDisplacement;
+                    }
+                    
+                    // Update geometry
+                    blob.geometry.attributes.position.needsUpdate = true;
+                    blob.geometry.computeVertexNormals();
+                    
+                    // Update material with audio-reactive colors
+                    const pulseIntensity = 0.5 + audioData.intensity * 0.5;
+                    const hue = (time * 0.0001 + audioData.bassIntensity * 0.2) % 1;
+                    blob.material.emissive.setHSL(hue, 0.8, 0.2 * pulseIntensity);
+                    blob.material.color.setHSL(hue, 0.8, 0.1 + 0.2 * pulseIntensity);
+                    
+                    // Update particles with magnetic field simulation
+                    const particlePositions = particles.geometry.attributes.position.array;
+                    const particleColors = particles.geometry.attributes.color.array;
+                    const originalParticlePos = particles.userData.originalPositions;
+                    
+                    for(let i = 0; i < particlePositions.length; i += 3) {
+                        const x = originalParticlePos[i];
+                        const y = originalParticlePos[i + 1];
+                        const z = originalParticlePos[i + 2];
+                        
+                        // Calculate magnetic field influence
+                        const distance = Math.sqrt(x*x + y*y + z*z);
+                        const influence = Math.max(0, 1 - distance/4);
+                        const angle = time * 0.001 + distance;
+                        
+                        // Add audio-reactive swirling
+                        const swirl = audioData.midIntensity * 2;
+                        particlePositions[i] = x + Math.sin(angle + y) * influence * swirl;
+                        particlePositions[i + 1] = y + Math.cos(angle + x) * influence * swirl;
+                        particlePositions[i + 2] = z + Math.sin(angle + z) * influence * swirl;
+                        
+                        // Update colors with audio reactivity
+                        particleColors[i] = 0.2 + audioData.bassIntensity * 0.8;
+                        particleColors[i + 1] = 0.5 + audioData.midIntensity * 0.5;
+                        particleColors[i + 2] = 1.0;
+                    }
+                    
+                    particles.geometry.attributes.position.needsUpdate = true;
+                    particles.geometry.attributes.color.needsUpdate = true;
+                    
+                    // Add subtle rotation based on audio
+                    currentMesh.rotation.x += audioData.bassIntensity * 0.01;
+                    currentMesh.rotation.y += audioData.midIntensity * 0.01;
+                    currentMesh.rotation.z += audioData.trebleIntensity * 0.005;
+                }
+            }
+        };
+
+        let currentEffect = null;
+        let currentMesh = null;
+
+        // Effect selector handler
+        document.getElementById('effectSelector').addEventListener('change', (e) => {
+            if (currentMesh) {
+                scene.remove(currentMesh);
+                if (currentMesh.geometry) currentMesh.geometry.dispose();
+                if (currentMesh.material) currentMesh.material.dispose();
+                if (currentMesh.children && currentMesh.children[0] && currentMesh.children[0].material) {
+                    currentMesh.children[0].material.dispose();
+                }
+            }
+            
+            const selectedEffect = visualEffects[e.target.value];
+            const effectData = selectedEffect.init();
+            currentEffect = selectedEffect;
+            currentMesh = effectData.mesh;
+            
+            // Reset glitch state
+            glitchIntensity = 0;
+            currentHue = Math.random();
+            
+            // Store effect-specific data
+            Object.assign(currentEffect, effectData);
+        });
+
+        // Voice selector handler
+        const voiceSelector = document.getElementById('voiceSelector');
+        voiceSelector.addEventListener('change', (e) => {
+            const currentTime = audioPlayer.currentTime;
+            const wasPlaying = !audioPlayer.paused;
+            audioPlayer.src = e.target.value;
+            audioPlayer.currentTime = currentTime;
+            if (wasPlaying) {
+                audioPlayer.play();
+            }
+        });
+
+        // Initialize default effect
+        currentEffect = visualEffects.glitchCube;
+        const effectData = currentEffect.init();
+        currentMesh = effectData.mesh;
+
+        // Trails
+        const trails = [];
+        const maxTrails = 30;
+        const particleTrails = [];
+
+        // Ambient glow particles
+        const particleCount = 100;
+        const particles = new THREE.Group();
+        const particleGeometry = new THREE.SphereGeometry(0.02);
+        const particleMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+            transparent: true,
+            opacity: 0.5
+        });
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 1 + Math.random() * 2;
+            particle.userData = {
+                angle: angle,
+                radius: radius,
+                speed: (Math.random() - 0.5) * 0.02,
+                pulseSpeed: 0.05 + Math.random() * 0.05,
+                pulseOffset: Math.random() * Math.PI * 2,
+                baseRadius: radius
+            };
+            particles.add(particle);
+            disposableObjects.add(particle);
+        }
+        scene.add(particles);
+        disposableObjects.add(particles);
+
+        // Glitch effect properties
+        let glitchIntensity = 0;
+        let lastGlitchTime = 0;
+        const glitchInterval = 1500;
+        let currentHue = 0.3; // Green hue
+
+        camera.position.z = 5;
+
+        function createTrail() {
+            const trailGeo = new THREE.BoxGeometry();
+            const trailMat = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff00,
+                transparent: true,
+                opacity: 0.3
+            });
+            const trail = new THREE.Mesh(trailGeo, trailMat);
+            const wireTrail = new THREE.Mesh(trailGeo, currentMesh.children[0].material.clone());
+            trail.add(wireTrail);
+            trail.position.copy(currentMesh.position);
+            trail.rotation.copy(currentMesh.rotation);
+            trail.scale.copy(currentMesh.scale);
+            scene.add(trail);
+            trails.push({
+                mesh: trail,
+                life: 1.0
+            });
+            disposableObjects.add(trail);
+            disposableObjects.add(wireTrail);
+        }
+
+        function createParticleExplosion(position) {
+            for (let i = 0; i < 10; i++) {
+                const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+                particle.position.copy(position);
+                particle.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.1,
+                    (Math.random() - 0.5) * 0.1,
+                    (Math.random() - 0.5) * 0.1
+                );
+                scene.add(particle);
+                particleTrails.push({
+                    mesh: particle,
+                    life: 1.0,
+                    velocity: particle.velocity
+                });
+                disposableObjects.add(particle);
+            }
+        }
+
+        function glitchEffect() {
+            if (!currentMesh || !currentMesh.material) return;
+
+            // Glitch displacement
+            const glitchAmount = Math.random() * 0.5;
+            currentMesh.position.x += (Math.random() - 0.5) * glitchAmount;
+            currentMesh.position.y += (Math.random() - 0.5) * glitchAmount;
+            
+            // Color glitch
+            currentHue = (currentHue + Math.random() * 0.1) % 1;
+            currentMesh.material.color.setHSL(currentHue, 1, 0.5);
+            
+            // Only apply wireframe color change if it exists
+            if (currentMesh.children && currentMesh.children[0] && currentMesh.children[0].material) {
+                currentMesh.children[0].material.color.setHSL((currentHue + 0.5) % 1, 1, 0.5);
+            }
+            
+            createParticleExplosion(currentMesh.position);
+        }
+
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - window.innerWidth / 2) / window.innerWidth;
+            mouseY = (event.clientY - window.innerHeight / 2) / window.innerHeight;
+        });
+
+        document.addEventListener('click', () => {
+            glitchIntensity = 0.8;
+            setTimeout(() => {
+                glitchIntensity = 0;
+                currentMesh.scale.set(1, 1, 1);
+            }, 200);
+        });
+
+        let lastBeatTime = 0;
+
+        function animate(time) {
+            requestAnimationFrame(animate);
+
+            // Process audio data
+            let audioIntensity = 0;
+            if (isAudioInitialized && analyzer) {
+                analyzer.getByteFrequencyData(dataArray);
+                
+                // Calculate frequency bands
+                const bassEnd = Math.floor(dataArray.length * 0.1);
+                const midEnd = Math.floor(dataArray.length * 0.5);
+                
+                const bassSum = Array.from(dataArray.slice(0, bassEnd)).reduce((a, b) => a + b, 0);
+                audioData.bassIntensity = bassSum / (bassEnd * 255);
+                
+                const midSum = Array.from(dataArray.slice(bassEnd, midEnd)).reduce((a, b) => a + b, 0);
+                audioData.midIntensity = midSum / ((midEnd - bassEnd) * 255);
+                
+                const trebleSum = Array.from(dataArray.slice(midEnd)).reduce((a, b) => a + b, 0);
+                audioData.trebleIntensity = trebleSum / ((dataArray.length - midEnd) * 255);
+                
+                audioData.intensity = (audioData.bassIntensity + audioData.midIntensity + audioData.trebleIntensity) / 3;
+                audioIntensity = audioData.intensity;
+            }
+
+            // Update current effect
+            if (currentEffect && currentEffect.update) {
+                currentEffect.update(time, audioData);
+            }
+
+            // Update trails
+            updateTrails(audioIntensity);
+
+            // Random glitch effect
+            if (time - lastGlitchTime > glitchInterval) {
+                const glitchStrength = isAudioInitialized ? 
+                    Math.random() * 0.5 * (1 + audioData.intensity) : 
+                    Math.random() * 0.5;
+                glitchIntensity = glitchStrength;
+                lastGlitchTime = time;
+                setTimeout(() => {
+                    glitchIntensity = 0;
+                }, 100);
+            }
+
+            if (glitchIntensity > 0) {
+                glitchEffect();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function updateTrails(audioIntensity) {
+            // Update trails with audio reactivity
+            trails.forEach((trail, i) => {
+                const lifeDecay = 0.02 * (1 + audioIntensity);
+                trail.life -= lifeDecay;
+                trail.mesh.material.opacity = trail.life * (0.3 + audioIntensity * 0.3);
+                if (trail.life <= 0) {
+                    scene.remove(trail.mesh);
+                    trails.splice(i, 1);
+                }
+            });
+
+            // Update particle trails
+            particleTrails.forEach((particle, i) => {
+                const lifeDecay = 0.02 * (1 + audioIntensity);
+                particle.life -= lifeDecay;
+                if (isAudioInitialized) {
+                    particle.velocity.multiplyScalar(1 + audioIntensity * 0.3);
+                }
+                particle.mesh.position.add(particle.velocity);
+                particle.mesh.material.opacity = particle.life * (0.5 + audioIntensity * 0.5);
+                if (particle.life <= 0) {
+                    scene.remove(particle.mesh);
+                    particleTrails.splice(i, 1);
+                }
+            });
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Add cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            cleanupScene();
+            if (audioContext) {
+                audioContext.close();
+            }
+            if (renderer) {
+                renderer.dispose();
+            }
+        });
+
+        // Performance monitoring
+        function createPerformanceMonitor() {
+            const monitor = document.createElement('div');
+            monitor.className = 'performance-monitor';
+            document.body.appendChild(monitor);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 100; // Made taller for better audio visualization
+            monitor.appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+            let lastTime = performance.now();
+            let frames = 0;
+            let fps = 0;
+            let lastFpsUpdate = performance.now();
+
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'stats-container';
+            monitor.appendChild(statsDiv);
+
+            function updateStats() {
+                const now = performance.now();
+                const frameTime = now - lastTime;
+                lastTime = now;
+                frames++;
+
+                if (now > lastFpsUpdate + 1000) {
+                    fps = Math.round((frames * 1000) / (now - lastFpsUpdate));
+                    frames = 0;
+                    lastFpsUpdate = now;
+                }
+
+                const memory = window.performance.memory ? {
+                    used: Math.round(window.performance.memory.usedJSHeapSize / 1048576),
+                    total: Math.round(window.performance.memory.jsHeapSizeLimit / 1048576)
+                } : null;
+
+                const renderInfo = renderer.info.render;
+                
+                statsDiv.innerHTML = `
+                    <div class="stat-row ${fps < 30 ? 'warning' : fps < 55 ? 'caution' : 'good'}">
+                        FPS: ${fps}
+                    </div>
+                    <div class="stat-row ${frameTime > 16.7 ? 'warning' : frameTime > 10 ? 'caution' : 'good'}">
+                        Frame: ${Math.round(frameTime)}ms
+                    </div>
+                    <div class="stat-row">
+                        Draw Calls: ${renderInfo.calls}
+                    </div>
+                    <div class="stat-row">
+                        Triangles: ${renderInfo.triangles.toLocaleString()}
+                    </div>
+                    ${memory ? `
+                        <div class="stat-row ${memory.used/memory.total > 0.8 ? 'warning' : memory.used/memory.total > 0.6 ? 'caution' : 'good'}">
+                            Memory: ${memory.used}MB / ${memory.total}MB
+                        </div>
+                    ` : ''}
+                    <div class="stat-row">
+                        Objects: ${scene.children.length}
+                    </div>
+                    <div class="stat-row">
+                        Audio: ${isAudioInitialized ? 'Active' : 'Inactive'}
+                    </div>
+                    <div class="stat-row">
+                        Audio Intensity: ${(audioData.intensity * 100).toFixed(1)}%
+                    </div>
+                `;
+
+                // Clear canvas
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw audio frequencies if available
+                if (isAudioInitialized && dataArray) {
+                    analyzer.getByteFrequencyData(dataArray);
+                    
+                    // Calculate frequency bands
+                    const bassEnd = Math.floor(dataArray.length * 0.1);
+                    const midEnd = Math.floor(dataArray.length * 0.5);
+                    
+                    const bassSum = Array.from(dataArray.slice(0, bassEnd)).reduce((a, b) => a + b, 0);
+                    audioData.bassIntensity = bassSum / (bassEnd * 255);
+                    
+                    const midSum = Array.from(dataArray.slice(bassEnd, midEnd)).reduce((a, b) => a + b, 0);
+                    audioData.midIntensity = midSum / ((midEnd - bassEnd) * 255);
+                    
+                    const trebleSum = Array.from(dataArray.slice(midEnd)).reduce((a, b) => a + b, 0);
+                    audioData.trebleIntensity = trebleSum / ((dataArray.length - midEnd) * 255);
+                    
+                    audioData.intensity = (audioData.bassIntensity + audioData.midIntensity + audioData.trebleIntensity) / 3;
+
+                    // Draw frequency bars
+                    for (let i = 0; i < dataArray.length; i++) {
+                        const value = dataArray[i];
+                        const percent = value / 255;
+                        const height = canvas.height * percent;
+                        const hue = 120 * (1 - percent); // Green to red
+                        
+                        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                        ctx.fillRect(
+                            i * canvas.width / dataArray.length,
+                            canvas.height - height,
+                            canvas.width / dataArray.length - 1,
+                            height
+                        );
+                    }
+
+                    // Draw peak line
+                    const avgFrequency = Array.from(dataArray).reduce((a, b) => a + b, 0) / (dataArray.length * 255);
+                    const avgPercent = avgFrequency / 255;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height - (canvas.height * avgPercent));
+                    ctx.lineTo(canvas.width, canvas.height - (canvas.height * avgPercent));
+                    ctx.stroke();
+                } else {
+                    // Draw "No Audio" message
+                    ctx.fillStyle = '#666';
+                    ctx.font = '14px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('No Audio Input', canvas.width / 2, canvas.height / 2);
+                }
+            }
+
+            function update() {
+                updateStats();
+                requestAnimationFrame(update);
+            }
+            update();
+        }
+
+        // Initialize performance monitor
+        createPerformanceMonitor();
+
+        // Countdown Timer Logic
+        const numberEncoding = {
+            '0': 'Ø',
+            '1': '┣',
+            '2': 'Ɋ',
+            '3': 'Ȝ',
+            '4': '₪',
+            '5': 'Ꝋ',
+            '6': '⊗',
+            '7': 'Ꙇ',
+            '8': '∞',
+            '9': 'Ω',
+            ':': '◊'
+        };
+
+        function encodeNumber(number) {
+            return String(number).split('').map(char => numberEncoding[char] || char).join('');
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+            const encodedTime = timeString.split('').map(char => numberEncoding[char] || char).join('');
+            
+            const countdown = document.getElementById('countdown');
+            countdown.textContent = encodedTime;
+            countdown.setAttribute('data-content', encodedTime);
+
+            // Additional random encoding for glitch effect
+            if (Math.random() < 0.1) {
+                const extraEncoded = encodedTime.split('').map(char => {
+                    if (Math.random() < 0.3) {
+                        const glitchChars = '╬┿╋┠┨┯┷┏┓└┛░▒▓█▀▄≡∑∆◈◇◆';
+                        return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                    }
+                    return char;
+                }).join('');
+                countdown.textContent = extraEncoded;
+            }
+        }
+
+        // Update countdown every 100ms for smooth animation
+        setInterval(updateCountdown, 100);
+
+        // Auto-resize chat input
+        const chatInput = document.getElementById('chat-input');
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Add send button click handler to toggle crypto audio
+        document.getElementById('send-button').addEventListener('click', function() {
+            const cryptoAudio = document.getElementById('cryptoAudio');
+            
+            if (!isAudioInitialized) {
+                initAudioContext();
+                audioSource = audioContext.createMediaElementSource(cryptoAudio);
+                audioSource.connect(analyzer);
+                audioSource.connect(audioContext.destination);
+                isAudioInitialized = true;
+            }
+            
+            if (cryptoAudio.paused) {
+                cryptoAudio.play();
+            } else {
+                cryptoAudio.pause();
+            }
+            currentAudioElement = cryptoAudio;
+        });
+
+        let currentAudioElement;
+
+        function switchToCryptoAudio() {
+            const cryptoAudio = document.getElementById('cryptoAudio');
+            const cryptoButton = document.getElementById('cryptoButton');
+            
+            if (!isAudioInitialized) {
+                initAudioContext();
+                
+                if (audioSource) {
+                    audioSource.disconnect();
+                }
+                
+                audioSource = audioContext.createMediaElementSource(cryptoAudio);
+                audioSource.connect(analyzer);
+                audioSource.connect(audioContext.destination);
+                isAudioInitialized = true;
+            }
+            
+            if (cryptoAudio.paused) {
+                cryptoAudio.play();
+                cryptoButton.classList.add('active');
+            } else {
+                cryptoAudio.pause();
+                cryptoButton.classList.remove('active');
+            }
+            currentAudioElement = cryptoAudio;
+        }
+
+        document.getElementById('cryptoButton').addEventListener('click', switchToCryptoAudio);
+
+        // Brain button navigation
+        document.getElementById('brainButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'brain.html';
+        });
+
+        // Add slide-in class to crypto button on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cryptoButton = document.getElementById('cryptoButton');
+            setTimeout(() => {
+                cryptoButton.classList.add('slide-in');
+            }, 500);
+        });
+    </script>
 </body>
 </html>
