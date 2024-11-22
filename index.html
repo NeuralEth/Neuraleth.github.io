@@ -1478,13 +1478,23 @@
 
         // Add send button click handler to toggle crypto audio
         document.getElementById('send-button').addEventListener('click', function() {
+            const audioPlayer = document.getElementById('audioPlayer');
             const cryptoAudio = document.getElementById('cryptoAudio');
+            
+            // Stop and hide the default audio player
+            audioPlayer.pause();
+            audioPlayer.style.display = 'none';
+            
+            // Reset any existing audio connections
+            if (audioSource) {
+                audioSource.disconnect();
+            }
             
             if (!isAudioInitialized) {
                 initAudioContext();
                 audioSource = audioContext.createMediaElementSource(cryptoAudio);
                 audioSource.connect(analyzer);
-                audioSource.connect(audioContext.destination);
+                analyzer.connect(audioContext.destination);
                 isAudioInitialized = true;
             }
             
@@ -1498,34 +1508,36 @@
 
         let currentAudioElement;
 
-        function switchToCryptoAudio() {
+        document.getElementById('cryptoButton').addEventListener('click', function() {
             const cryptoAudio = document.getElementById('cryptoAudio');
-            const cryptoButton = document.getElementById('cryptoButton');
             
             if (!isAudioInitialized) {
                 initAudioContext();
                 
+                // Disconnect any existing audio source
                 if (audioSource) {
                     audioSource.disconnect();
                 }
                 
                 audioSource = audioContext.createMediaElementSource(cryptoAudio);
                 audioSource.connect(analyzer);
-                audioSource.connect(audioContext.destination);
+                analyzer.connect(audioContext.destination);
                 isAudioInitialized = true;
+                
+                // Update data array for visualization
+                dataArray = new Uint8Array(analyzer.frequencyBinCount);
             }
             
             if (cryptoAudio.paused) {
                 cryptoAudio.play();
-                cryptoButton.classList.add('active');
+                if (currentEffect) {
+                    currentEffect.onBeat && currentEffect.onBeat();
+                }
             } else {
                 cryptoAudio.pause();
-                cryptoButton.classList.remove('active');
             }
             currentAudioElement = cryptoAudio;
-        }
-
-        document.getElementById('cryptoButton').addEventListener('click', switchToCryptoAudio);
+        });
 
         // Brain button navigation
         document.getElementById('brainButton').addEventListener('click', function(e) {
